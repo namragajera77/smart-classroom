@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Analytics – Smart Classroom</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="theme.css">
+    <style>
+        body { background-color: #0A0B1A; }
+
+        /* ── NAVBAR ── */
+        .navbar {
+            height: 68px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 28px;
+        }
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(135deg,#fff,#A78BFA);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .nav-logo { width: 32px; height: 32px; background: linear-gradient(135deg,#6C63FF,#4F46E5); border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+
+        /* ── LAYOUT ── */
+        .container { max-width: 1040px; margin: 0 auto; padding: 0 24px 60px; }
+
+        /* ── PAGE HEADER ── */
+        .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 14px; }
+        .page-header h1 { font-size: 28px; color: #fff; font-weight: 800; }
+        .page-header h1 span { background: linear-gradient(135deg,#06B6D4,#A78BFA); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+        /* ── STATS GRID ── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 16px;
+        }
+        .stat-card {
+            text-align: center !important;
+            border-radius: 20px !important;
+        }
+        .stat-card h3 {
+            font-size: 11px !important;
+            color: var(--muted) !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.08em !important;
+            margin-bottom: 10px !important;
+            background: none !important;
+            -webkit-text-fill-color: var(--muted) !important;
+            font-family: 'Inter', sans-serif !important;
+        }
+        .stat-value {
+            font-size: 42px;
+            font-weight: 900;
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg,#06B6D4,#A78BFA);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .stat-label { font-size: 11px; color: var(--muter); margin-top: 4px; font-family: 'Inter', sans-serif; }
+
+        /* ── AI ANALYSIS ── */
+        .prediction-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .prediction-block {
+            text-align: center;
+            padding: 22px !important;
+        }
+        .prediction-block h3 {
+            font-size: 12px !important;
+            color: var(--muted) !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.08em !important;
+            margin-bottom: 14px !important;
+            background: none !important;
+            -webkit-text-fill-color: var(--muted) !important;
+            font-family: 'Inter', sans-serif !important;
+        }
+
+        /* Engagement bar */
+        .engagement-wrap { margin-top: 6px; }
+        .eng-label { font-size: 13px; color: var(--muted); margin-bottom: 10px; font-family: 'Inter', sans-serif; }
+        .engagement-track { background: rgba(255,255,255,0.06); border-radius: 999px; height: 28px; overflow: hidden; }
+        .engagement-fill {
+            background: linear-gradient(90deg,#6C63FF,#06B6D4);
+            height: 100%;
+            border-radius: 999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            color: white;
+            width: 0;
+            transition: width 1.2s cubic-bezier(0.25,0.46,0.45,0.94);
+            box-shadow: 0 0 16px rgba(108,99,255,0.4);
+        }
+        .confidence-text { font-size: 13px; color: var(--muted); text-align: center; margin-top: 10px; font-family: 'Inter', sans-serif; }
+
+        /* Focus chart */
+        .heatmap-wrap { overflow-x: auto; }
+        .heatmap-container {
+            display: flex;
+            align-items: flex-end;
+            gap: 5px;
+            min-height: 220px;
+            min-width: 600px;
+            padding-bottom: 28px;
+        }
+        .heatmap-bar {
+            flex: 1;
+            min-width: 28px;
+            border-radius: 8px 8px 4px 4px;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.2s, filter 0.2s;
+        }
+        .heatmap-bar:hover { transform: translateY(-6px); filter: brightness(1.25); }
+        .heatmap-value { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.8); white-space: nowrap; }
+        .heatmap-label { position: absolute; bottom: -22px; left: 50%; transform: translateX(-50%); font-size: 9px; color: var(--muted); white-space: nowrap; }
+        .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 16px; }
+        .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); font-family: 'Inter', sans-serif; }
+        .legend-color { width: 14px; height: 14px; border-radius: 4px; }
+
+        /* Section heading override */
+        .section-h { font-size: 18px !important; margin-bottom: 20px !important; }
+        .subtext { color: var(--muted) !important; font-size: 13px !important; margin-bottom: 16px !important; background: none !important; -webkit-text-fill-color: var(--muted) !important; }
+
+        @media (max-width: 700px) { .prediction-grid { grid-template-columns: 1fr; } .page-header { flex-direction: column; } }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <div class="nav-logo">🎓</div>
+            Smart Classroom
+        </div>
+        <a href="student-dashboard.html" class="btn btn-outline" style="text-decoration:none;padding:10px 20px!important;">← Back to Dashboard</a>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <h1>Your <span>Analytics</span></h1>
+        </div>
+
+        <div id="loadingState" class="loading"></div>
+
+        <div id="analyticsContent" style="display:none;">
+            <!-- Session Summary -->
+            <div class="section">
+                <h2 class="section-h">📋 Your Session Summary</h2>
+                <p class="subtext">Only behavioral data is analyzed. No video or audio is ever stored.</p>
+                <div class="stats-grid">
+                    <article class="stat-card feature-card">
+                        <div class="icon">⏱️</div>
+                        <h3>Total Time</h3>
+                        <div class="stat-value" id="studyDuration">0</div>
+                        <div class="stat-label">session duration (hh:mm:ss)</div>
+                    </article>
+                    <article class="stat-card feature-card">
+                        <div class="icon">😴</div>
+                        <h3>Inactive Time</h3>
+                        <div class="stat-value" id="idleTime">0</div>
+                        <div class="stat-label">inactive duration (hh:mm:ss)</div>
+                    </article>
+                    <article class="stat-card feature-card">
+                        <div class="icon">🔀</div>
+                        <h3>Distractions</h3>
+                        <div class="stat-value" id="tabSwitches">0</div>
+                        <div class="stat-label">tab switches</div>
+                    </article>
+                    <article class="stat-card feature-card">
+                        <div class="icon">☕</div>
+                        <h3>Breaks</h3>
+                        <div class="stat-value" id="breaks">0</div>
+                        <div class="stat-label">times paused</div>
+                    </article>
+                </div>
+            </div>
+
+            <!-- AI Analysis -->
+            <div class="section">
+                <h2 class="section-h">🤖 AI Analysis</h2>
+                <div class="prediction-grid">
+                    <div class="prediction-block feature-card">
+                        <h3>Attention Status</h3>
+                        <div id="attentionStatus"></div>
+                    </div>
+                    <div class="prediction-block feature-card">
+                        <h3>Cognitive Load</h3>
+                        <div id="cognitiveLoad"></div>
+                    </div>
+                </div>
+
+                <div class="engagement-wrap">
+                    <div class="eng-label">Engagement Score</div>
+                    <div class="engagement-track">
+                        <div id="engagementBar" class="engagement-fill"></div>
+                    </div>
+                    <div class="confidence-text">Model Confidence: <strong id="confidence" style="color:#A78BFA;">0%</strong></div>
+                </div>
+
+                <div class="suggestion-box">
+                    <h4>💡 Personalized Suggestion</h4>
+                    <p id="suggestion" style="color:var(--muted);font-size:14px;">Loading...</p>
+                </div>
+            </div>
+
+            <!-- Focus Journey -->
+            <div class="section">
+                <h2 class="section-h">📈 Your Focus Journey</h2>
+                <p class="subtext">Each bar shows your focus level across the session timeline.</p>
+                <div class="heatmap-wrap">
+                    <div class="heatmap-container" id="heatmapContainer"></div>
+                </div>
+                <div class="legend">
+                    <div class="legend-item"><div class="legend-color" style="background:#ef4444;"></div><span>Low Focus (0–40)</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background:#f59e0b;"></div><span>Moderate (40–70)</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background:#10b981;"></div><span>High Focus (70–100)</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user'));
+        const tokenExpiry = localStorage.getItem('tokenExpiry');
+        const meetingId = new URLSearchParams(window.location.search).get('meetingId');
+
+        if (!token || !user || user.role !== 'student' || !meetingId) window.location.href = 'login.html';
+        if (tokenExpiry && Date.now() > parseInt(tokenExpiry)) {
+            ['token','user','tokenExpiry'].forEach(k => localStorage.removeItem(k));
+            window.location.href = 'login.html';
+        }
+
+        loadAnalytics();
+
+        async function loadAnalytics() {
+            try {
+                const res = await fetch(`${API_URL}/analytics/my-stats/${meetingId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const data = await res.json();
+                if (data.success) displayAnalytics(data.analytics);
+                else {
+                    document.getElementById('loadingState').innerHTML = `
+                        <p style="color:#FCA5A5;">${data.message || 'No analytics found for this meeting.'}</p>
+                        <p style="color:var(--muted);margin-top:8px;">Make sure you completed the meeting session and submitted analytics.</p>
+                        <button onclick="window.location.href='student-dashboard.html'" class="btn" style="margin-top:16px;">Back to Dashboard</button>`;
+                }
+            } catch (err) {
+                document.getElementById('loadingState').innerHTML = `
+                    <p style="color:#FCA5A5;">Error loading analytics.</p>
+                    <p style="color:var(--muted);margin-top:8px;">${err.message}</p>
+                    <button onclick="window.location.href='student-dashboard.html'" class="btn" style="margin-top:16px;">Back to Dashboard</button>`;
+            }
+        }
+
+        function displayAnalytics(analytics) {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('analyticsContent').style.display = 'block';
+
+            const studySeconds = Number(analytics.behavioralData.study_duration_seconds) || (Number(analytics.behavioralData.study_duration) || 0) * 60;
+            const idleSeconds = Number(analytics.behavioralData.idle_time_seconds) || (Number(analytics.behavioralData.idle_time) || 0) * 60;
+
+            document.getElementById('studyDuration').textContent = formatDuration(studySeconds);
+            document.getElementById('idleTime').textContent = formatDuration(idleSeconds);
+            document.getElementById('tabSwitches').textContent = analytics.behavioralData.tab_switch_count;
+            document.getElementById('breaks').textContent = analytics.behavioralData.break_count;
+
+            const status = analytics.predictions.attention_status;
+            document.getElementById('attentionStatus').innerHTML = `<span class="status-badge status-${status}">${status.toUpperCase()}</span>`;
+
+            const load = (analytics.predictions.cognitive_load || 'optimal').toLowerCase();
+            const loadClass = load === 'optimal' || load === 'low' ? 'status-focused' : load === 'high' ? 'status-distracted' : 'status-moderate';
+            document.getElementById('cognitiveLoad').innerHTML = `<span class="status-badge ${loadClass}">${load.toUpperCase()}</span>`;
+
+            const score = analytics.predictions.engagement_score;
+            const bar = document.getElementById('engagementBar');
+            setTimeout(() => { bar.style.width = `${score}%`; bar.textContent = `${score}%`; }, 200);
+
+            document.getElementById('confidence').textContent = `${(analytics.predictions.confidence * 100).toFixed(0)}%`;
+            document.getElementById('suggestion').textContent = analytics.predictions.suggestion;
+
+            renderFocusHeatmap(analytics.focusTimeline || []);
+        }
+
+        function formatDuration(totalSeconds) {
+            const safeSeconds = Math.max(0, Number(totalSeconds) || 0);
+            const hours = Math.floor(safeSeconds / 3600);
+            const minutes = Math.floor((safeSeconds % 3600) / 60);
+            const seconds = safeSeconds % 60;
+
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        function renderFocusHeatmap(timeline) {
+            const container = document.getElementById('heatmapContainer');
+            container.innerHTML = '';
+            if (!timeline.length) { container.innerHTML = '<p style="color:var(--muted);padding:24px;">No focus data available for this session.</p>'; return; }
+
+            timeline.forEach((point, i) => {
+                const bar = document.createElement('div');
+                bar.className = 'heatmap-bar';
+                const level = Math.max(0, Math.min(100, point.focusLevel));
+                const h = Math.max(level, 12);
+                bar.style.height = `${(h / 100) * 190}px`;
+                bar.style.background = level >= 70
+                    ? 'linear-gradient(to top, #059669, #10b981, #6ee7b7)'
+                    : level >= 40
+                        ? 'linear-gradient(to top, #d97706, #f59e0b, #fcd34d)'
+                        : 'linear-gradient(to top, #dc2626, #ef4444, #fca5a5)';
+
+                const val = document.createElement('div');
+                val.className = 'heatmap-value';
+                val.textContent = level;
+                bar.appendChild(val);
+
+                const label = document.createElement('div');
+                label.className = 'heatmap-label';
+                if (i % 2 === 0 || timeline.length < 10) {
+                    label.textContent = new Date(point.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                }
+                bar.appendChild(label);
+                bar.title = `Focus ${level}% at ${new Date(point.timestamp).toLocaleTimeString()}`;
+                container.appendChild(bar);
+            });
+        }
+    </script>
+</body>
+</html>

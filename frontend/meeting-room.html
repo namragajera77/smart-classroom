@@ -1,0 +1,2580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meeting Room – Smart Classroom</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="theme.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; overflow: hidden; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #060816;
+            color: #EEF0FF;
+        }
+
+        /* ── LAYOUT ── */
+        .meeting-shell {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* ── MAIN AREA ── */
+        .main-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        /* ── HEADER ── */
+        .meeting-header {
+            height: 60px;
+            background: rgba(6,8,22,0.90);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            flex-shrink: 0;
+            z-index: 20;
+        }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .header-logo { display: flex; align-items: center; gap: 8px; font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 15px; background: linear-gradient(135deg,#fff,#A78BFA); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .header-logo-icon { width: 28px; height: 28px; background: linear-gradient(135deg,#6C63FF,#4F46E5); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+        .header-divider { width: 1px; height: 24px; background: rgba(255,255,255,0.1); }
+        .meeting-info-block { display: flex; flex-direction: column; }
+        .meeting-title-text { font-size: 15px; font-weight: 600; color: #fff; font-family: 'Poppins', sans-serif; }
+        .meeting-id-text { font-size: 11px; color: var(--muted); font-family: monospace; margin-top: 2px; }
+        .header-right { display: flex; align-items: center; gap: 12px; }
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(16,185,129,0.12);
+            border: 1px solid rgba(16,185,129,0.3);
+            padding: 5px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #34d399;
+            font-family: 'Poppins', sans-serif;
+        }
+        .live-dot { width: 6px; height: 6px; background: #10b981; border-radius: 50%; animation: live-pulse 1.5s infinite; }
+        .timer { font-family: monospace; font-size: 14px; color: var(--muted); }
+
+        /* ── VIDEO GRID ── */
+        .video-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 14px;
+            padding: 16px;
+            overflow-y: auto;
+            align-content: start;
+        }
+
+        .video-container {
+            position: relative;
+            background: rgba(10,12,30,0.9);
+            border-radius: 20px;
+            overflow: hidden;
+            aspect-ratio: 16 / 9;
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            transition: all 0.3s;
+        }
+        .video-container:hover {
+            border-color: rgba(108,99,255,0.4);
+            box-shadow: 0 16px 48px rgba(108,99,255,0.2);
+        }
+        video { width: 100%; height: 100%; object-fit: cover; background: #060816; }
+
+        .video-label {
+            position: absolute;
+            bottom: 12px; left: 12px;
+            background: rgba(6,8,22,0.80);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.08);
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #fff;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .video-no-cam {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: rgba(10,12,30,0.95);
+        }
+        .video-avatar {
+            width: 72px; height: 72px;
+            border-radius: 50%;
+            background: linear-gradient(135deg,#6C63FF,#A78BFA);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            font-weight: 800;
+            color: white;
+            font-family: 'Poppins', sans-serif;
+        }
+        .video-name { font-size: 16px; font-weight: 600; color: #fff; font-family: 'Poppins', sans-serif; }
+        .hand-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(245,158,11,0.9);
+            color: #111827;
+            border-radius: 999px;
+            padding: 6px 10px;
+            font-size: 11px;
+            font-weight: 700;
+            font-family: 'Poppins', sans-serif;
+            display: none;
+            box-shadow: 0 4px 14px rgba(245,158,11,0.4);
+        }
+
+        /* ── CONTROLS BAR ── */
+        .controls {
+            height: 88px;
+            background: rgba(6,8,22,0.90);
+            backdrop-filter: blur(28px);
+            border-top: 1px solid rgba(255,255,255,0.07);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 0 24px;
+            flex-shrink: 0;
+        }
+        .control-btn {
+            width: 52px; height: 52px;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.10);
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+            position: relative;
+            overflow: hidden;
+        }
+        .control-btn:hover {
+            background: rgba(108,99,255,0.2);
+            border-color: rgba(108,99,255,0.4);
+            transform: translateY(-4px) scale(1.06);
+            box-shadow: 0 8px 24px rgba(108,99,255,0.3);
+        }
+        /* Ripple */
+        .control-btn::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(255,255,255,0.2);
+            border-radius: inherit;
+            transform: scale(0);
+            opacity: 0;
+            transition: transform 0.4s, opacity 0.4s;
+        }
+        .control-btn:active::after { transform: scale(2); opacity: 0; }
+        .btn-mic { background: rgba(255,255,255,0.08); }
+        .btn-hand.active {
+            background: linear-gradient(135deg,#f59e0b,#d97706) !important;
+            border-color: transparent !important;
+            box-shadow: 0 4px 16px rgba(245,158,11,0.35);
+        }
+        .btn-sound.muted {
+            background: rgba(239,68,68,0.2) !important;
+            border-color: rgba(239,68,68,0.3) !important;
+            color: #fca5a5 !important;
+        }
+        .btn-share.active {
+            background: linear-gradient(135deg,#0ea5e9,#0284c7) !important;
+            border-color: transparent !important;
+            box-shadow: 0 4px 16px rgba(14,165,233,0.35);
+        }
+        .btn-request.pending {
+            background: linear-gradient(135deg,#f59e0b,#d97706) !important;
+            border-color: transparent !important;
+            box-shadow: 0 4px 16px rgba(245,158,11,0.35);
+        }
+        .btn-mic.muted, .btn-camera.off {
+            background: linear-gradient(135deg,#b91c1c,#ef4444) !important;
+            border-color: transparent !important;
+            box-shadow: 0 4px 16px rgba(239,68,68,0.3);
+        }
+        .btn-leave {
+            background: linear-gradient(135deg,#b91c1c,#ef4444) !important;
+            border-color: transparent !important;
+            width: auto !important;
+            padding: 0 24px !important;
+            font-size: 14px !important;
+            font-family: 'Poppins', sans-serif !important;
+            font-weight: 700 !important;
+            gap: 8px;
+            box-shadow: 0 4px 16px rgba(239,68,68,0.35) !important;
+        }
+        .btn-leave:hover { box-shadow: 0 8px 32px rgba(239,68,68,0.5) !important; }
+        .btn-analytics {
+            background: linear-gradient(135deg,#0ea5e9,#0284c7) !important;
+            border: none !important;
+            border-radius: 14px !important;
+            color: white !important;
+            padding: 0 20px !important;
+            height: 52px !important;
+            font-family: 'Poppins', sans-serif !important;
+            font-weight: 700 !important;
+            font-size: 13px !important;
+            cursor: pointer !important;
+            transition: all 0.3s !important;
+            box-shadow: 0 4px 16px rgba(14,165,233,0.35) !important;
+            width: auto !important;
+        }
+        .btn-analytics:hover { transform: translateY(-3px) !important; box-shadow: 0 8px 28px rgba(14,165,233,0.5) !important; }
+        .controls-left { position: absolute; left: 24px; }
+        .controls-right { position: absolute; right: 24px; }
+
+        .screen-share-indicator {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            background: rgba(14,165,233,0.15);
+            border: 1px solid rgba(14,165,233,0.35);
+            color: #7dd3fc;
+            border-radius: 999px;
+            padding: 5px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        /* ── CHAT PANEL ── */
+        .chat-panel {
+            width: 320px;
+            background: rgba(10,12,32,0.97);
+            border-left: 1px solid rgba(255,255,255,0.07);
+            display: flex;
+            flex-direction: column;
+            transition: width 0.3s ease;
+            flex-shrink: 0;
+        }
+        .chat-panel.hidden { width: 0; overflow: hidden; }
+        .chat-header {
+            height: 60px;
+            padding: 0 20px;
+            background: rgba(108,99,255,0.10);
+            border-bottom: 1px solid rgba(108,99,255,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            flex-shrink: 0;
+        }
+        .chat-close-btn {
+            background: transparent;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 16px;
+            padding: 4px;
+            transition: color 0.2s;
+        }
+        .chat-close-btn:hover { color: #fff; }
+        .chat-messages {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .chat-message { animation: fadeUpIn 0.3s both; }
+        .chat-message .sender { font-size: 11px; font-weight: 600; color: #A78BFA; margin-bottom: 4px; font-family: 'Poppins', sans-serif; }
+        .chat-message .text {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 0 12px 12px 12px;
+            padding: 10px 14px;
+            font-size: 13px;
+            line-height: 1.5;
+            color: rgba(255,255,255,0.85);
+        }
+        .chat-message.own .text {
+            background: rgba(108,99,255,0.15);
+            border-color: rgba(108,99,255,0.2);
+            border-radius: 12px 0 12px 12px;
+        }
+        .chat-message.own .sender { color: var(--accent); text-align: right; }
+        .chat-file-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.09);
+            border-radius: 12px;
+            padding: 10px;
+        }
+        .chat-file-card a {
+            color: #93c5fd;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .chat-file-meta {
+            margin-top: 6px;
+            color: var(--muted);
+            font-size: 11px;
+        }
+        .chat-image-preview {
+            max-width: 220px;
+            max-height: 180px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+            display: block;
+            margin-bottom: 8px;
+            object-fit: cover;
+        }
+        .chat-input-area {
+            padding: 14px;
+            border-top: 1px solid rgba(255,255,255,0.07);
+            display: flex;
+            gap: 8px;
+        }
+        .chat-input-area input {
+            flex: 1;
+            padding: 10px 14px !important;
+            border-radius: 10px !important;
+            font-size: 13px !important;
+        }
+        .chat-input-area button {
+            background: var(--brand-grad) !important;
+            border: none !important;
+            border-radius: 10px !important;
+            color: white !important;
+            padding: 10px 16px !important;
+            font-weight: 600 !important;
+            font-family: 'Poppins', sans-serif !important;
+            cursor: pointer;
+            font-size: 13px !important;
+            transition: all 0.2s !important;
+            white-space: nowrap;
+        }
+        .chat-input-area button:hover { opacity: 0.9 !important; transform: translateY(-1px) !important; }
+
+        /* ── BEHAVIORAL TRACKER ── */
+        .behavioral-tracker {
+            position: fixed;
+            top: 76px; right: 336px;
+            z-index: 30;
+            background: rgba(8,10,28,0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(108,99,255,0.2);
+            border-radius: 16px;
+            padding: 16px 20px;
+            min-width: 220px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        }
+        .behavioral-tracker h4 { color: #A78BFA; font-size: 13px; font-weight: 700; margin-bottom: 12px; font-family: 'Poppins', sans-serif; letter-spacing: 0.04em; }
+        .stat-row { display: flex; justify-content: space-between; align-items: center; margin: 8px 0; }
+        .stat-row span { font-size: 12px; color: var(--muted); }
+        .stat-row .stat-val { color: var(--accent) !important; font-weight: 700; font-family: 'Poppins', sans-serif; font-size: 13px; }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 860px) {
+            body { overflow: auto; }
+            .meeting-shell { flex-direction: column; height: auto; min-height: 100vh; }
+            .main-area { min-height: 70vh; }
+            .chat-panel { width: 100% !important; border-left: none; border-top: 1px solid rgba(255,255,255,0.07); max-height: 35vh; }
+            .chat-panel.hidden { height: 0; max-height: 0; }
+            .behavioral-tracker { right: 12px; top: auto; bottom: 100px; }
+            .controls { height: auto; flex-wrap: wrap; padding: 14px 16px; gap: 10px; }
+            .controls-left, .controls-right { position: static; }
+        }
+    </style>
+</head>
+<body>
+<div class="meeting-shell">
+    <!-- Main Area -->
+    <div class="main-area">
+        <!-- Header -->
+        <div class="meeting-header">
+            <div class="header-left">
+                <div class="header-logo">
+                    <div class="header-logo-icon">🎓</div>
+                    Smart Classroom
+                </div>
+                <div class="header-divider"></div>
+                <div class="meeting-info-block">
+                    <div class="meeting-title-text" id="meetingTitle">Meeting Room</div>
+                    <div class="meeting-id-text" id="meetingId">Loading...</div>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="live-indicator">
+                    <div class="live-dot"></div>
+                    LIVE
+                </div>
+                <div class="screen-share-indicator" id="screenShareIndicator">🖥️ Screen sharing active</div>
+                <div class="timer" id="timer">00:00</div>
+            </div>
+        </div>
+
+        <!-- Video Grid -->
+        <div class="video-grid" id="videoGrid">
+            <div class="video-container">
+                <video id="localVideo" autoplay muted playsinline></video>
+                <div class="video-no-cam" id="localNoCam" style="display:none;">
+                    <div class="video-avatar" id="localAvatar">Y</div>
+                    <div class="video-name">You</div>
+                </div>
+                <div class="video-label">You (Local)</div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls" style="position:relative;">
+            <div style="display:flex;align-items:center;gap:10px;position:absolute;left:24px;">
+                <div style="font-size:12px;color:var(--muted);font-family:'Poppins',sans-serif;" id="participantCount">1 participant</div>
+            </div>
+            <button class="control-btn btn-mic" id="micBtn" onclick="toggleMic()" title="Microphone">🎤</button>
+            <button class="control-btn btn-camera" id="cameraBtn" onclick="toggleCamera()" title="Camera">📹</button>
+            <button class="control-btn btn-hand" id="handBtn" onclick="toggleHandRaise()" title="Raise Hand" style="display:none;">✋</button>
+            <button class="control-btn btn-request" id="requestShareBtn" onclick="requestScreenSharePermission()" title="Request Screen Share" style="display:none;">🙋</button>
+            <button class="control-btn btn-share" id="shareScreenBtn" onclick="toggleScreenShare()" title="Share Screen" style="display:none;">🖥️</button>
+            <button class="control-btn btn-poll" id="pollBtn" onclick="openPollMenu()" title="Create Poll" style="display:none;">📊</button>
+            <button class="control-btn" id="waitingRoomBtn" onclick="toggleWaitingRoom()" title="Waiting Room" style="display:none;position:relative;">⏳<span id="waitingBadge" style="position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;width:20px;height:20px;border-radius:50%;display:none;align-items:center;justify-content:center;font-size:10px;font-weight:700;">0</span></button>
+            <button class="control-btn btn-sound" id="soundBtn" onclick="toggleSoundNotification()" title="Sound Notifications: ON">🔔</button>
+            <button class="control-btn btn-chat" onclick="toggleChat()" title="Chat">💬</button>
+            <button class="control-btn btn-leave" onclick="leaveMeeting()" title="Leave">📞 Leave</button>
+
+        </div>
+    </div>
+
+    <!-- Chat Panel -->
+    <div class="chat-panel hidden" id="chatPanel">
+        <div class="chat-header">
+            <span>💬 Chat</span>
+            <button class="chat-close-btn" onclick="toggleChat()">✕</button>
+        </div>
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-input-area">
+            <input type="file" id="chatFileInput" style="display:none;" accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.txt,.rtf,.ppt,.pptx,.xls,.xlsx" onchange="handleChatFileSelected(event)">
+            <button onclick="triggerChatFilePicker()" title="Attach file" style="padding:10px 12px!important;">📎</button>
+            <input type="text" id="chatInput" placeholder="Send a message...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <!-- Poll Panel -->
+    <div class="chat-panel hidden" id="pollPanel" style="background:#0A0C1E;">
+        <div class="chat-header">
+            <span>📊 Poll</span>
+            <button class="chat-close-btn" onclick="togglePoll()">✕</button>
+        </div>
+        <div id="pollContent" style="flex:1;overflow-y:auto;padding:16px;">
+            <!-- Poll content will be inserted here -->
+        </div>
+    </div>
+
+    <!-- Waiting Room Panel (Teacher only) -->
+    <div class="chat-panel hidden" id="waitingRoomPanel" style="background:#0A0C1E;">
+        <div class="chat-header">
+            <span>⏳ Waiting Room</span>
+            <span id="waitingCount" style="background:rgba(239,68,68,0.3);padding:2px 8px;border-radius:999px;font-size:11px;">0</span>
+        </div>
+        <div id="waitingRoomContent" style="flex:1;overflow-y:auto;padding:16px;"></div>
+        <div style="padding:12px;border-top:1px solid rgba(255,255,255,0.07);">
+            <button onclick="admitAllWaiting()" style="width:100%;padding:10px;background:rgba(34,197,94,0.2);border:1px solid rgba(34,197,94,0.3);color:#86efac;border-radius:8px;font-family:Poppins,sans-serif;font-size:12px;cursor:pointer;">👥 Admit All</button>
+        </div>
+    </div>
+
+    <!-- Poll Creation Modal (Teacher only) -->
+    <div id="pollModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:1000;justify-content:center;align-items:center;">
+        <div style="background:#0A0B1A;border-radius:20px;padding:28px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;border:1px solid rgba(255,255,255,0.1);">
+            <h2 style="color:#fff;margin-bottom:20px;font-family:'Poppins',sans-serif;font-size:20px;">📊 Create Poll</h2>
+            
+            <div style="margin-bottom:16px;">
+                <label style="color:var(--muted);font-size:12px;">Poll Title</label>
+                <input type="text" id="pollTitle" placeholder="e.g., Quick Check: Chapter 3" style="width:100%;padding:10px;margin-top:6px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#fff;font-family:Inter,sans-serif;">
+            </div>
+
+            <div style="margin-bottom:16px;">
+                <label style="color:var(--muted);font-size:12px;">Question</label>
+                <textarea id="pollQuestion" placeholder="What is your answer?" style="width:100%;padding:10px;margin-top:6px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#fff;font-family:Inter,sans-serif;resize:none;height:80px;"></textarea>
+            </div>
+
+            <div style="margin-bottom:16px;">
+                <label style="color:var(--muted);font-size:12px;">Options</label>
+                <div id="pollOptions" style="margin-top:10px;"></div>
+                <button onclick="addPollOption()" style="margin-top:10px;padding:8px 16px;background:rgba(108,99,255,0.15);border:1px dashed rgba(108,99,255,0.3);color:#A78BFA;border-radius:8px;cursor:pointer;font-family:Inter,sans-serif;font-size:12px;">+ Add Option</button>
+            </div>
+
+            <div style="margin-bottom:16px;display:flex;align-items:center;gap:10px;">
+                <input type="checkbox" id="showResultsCheckbox" style="cursor:pointer;">
+                <label for="showResultsCheckbox" style="color:var(--muted);font-size:12px;cursor:pointer;">Show results to students after closing</label>
+            </div>
+
+            <div style="display:flex;gap:10px;">
+                <button onclick="closePollModal()" style="flex:1;padding:12px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);color:#fff;border-radius:10px;cursor:pointer;font-family:Poppins,sans-serif;font-weight:600;">Cancel</button>
+                <button onclick="submitPoll()" style="flex:1;padding:12px;background:linear-gradient(135deg,#6C63FF,#4F46E5);border:none;color:#fff;border-radius:10px;cursor:pointer;font-family:Poppins,sans-serif;font-weight:600;">Create Poll</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Waiting Room Overlay (Student) -->
+    <div id="waitingRoomOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);z-index:3000;justify-content:center;align-items:center;">
+        <div style="background:#0A0B1A;border-radius:20px;padding:36px;max-width:420px;width:90%;border:1px solid rgba(255,255,255,0.1);text-align:center;">
+            <div style="font-size:46px;margin-bottom:12px;">⏳</div>
+            <h2 style="color:#fff;margin-bottom:10px;font-family:'Poppins',sans-serif;">Waiting for Host Approval</h2>
+            <p style="color:var(--muted);font-size:14px;line-height:1.6;margin-bottom:16px;">Your join request has been sent. You will enter automatically when the host admits you.</p>
+            <div id="waitingRoomStatus" style="color:#A78BFA;font-size:13px;margin-bottom:16px;">Waiting...</div>
+            <button onclick="leaveWaitingRoom()" style="width:100%;padding:12px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:#fff;border-radius:10px;cursor:pointer;font-family:Poppins,sans-serif;font-weight:600;">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Screen Share Request Modal (Teacher) -->
+    <div id="screenShareRequestModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.75);z-index:3200;justify-content:center;align-items:center;">
+        <div style="background:#0A0B1A;border-radius:20px;padding:28px;max-width:420px;width:90%;border:1px solid rgba(255,255,255,0.1);box-shadow:0 20px 60px rgba(0,0,0,0.6);">
+            <h2 style="color:#fff;margin-bottom:10px;font-family:'Poppins',sans-serif;font-size:20px;font-weight:700;">🖥️ Screen Share Request</h2>
+            <p id="screenShareRequestText" style="color:var(--muted);font-size:14px;line-height:1.6;margin-bottom:18px;">A student requested to share screen.</p>
+            <div style="display:flex;gap:10px;">
+                <button onclick="rejectCurrentScreenShareRequest()" style="flex:1;padding:12px;background:rgba(239,68,68,0.2);border:1px solid rgba(239,68,68,0.3);color:#fca5a5;border-radius:10px;cursor:pointer;font-family:Poppins,sans-serif;font-weight:600;">Reject</button>
+                <button onclick="approveCurrentScreenShareRequest()" style="flex:1;padding:12px;background:rgba(34,197,94,0.2);border:1px solid rgba(34,197,94,0.35);color:#86efac;border-radius:10px;cursor:pointer;font-family:Poppins,sans-serif;font-weight:600;">Approve</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Password Modal -->
+    <div id="passwordModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:2000;justify-content:center;align-items:center;">
+        <div style="background:#0A0B1A;border-radius:20px;padding:40px;max-width:420px;width:90%;border:1px solid rgba(255,255,255,0.1);box-shadow:0 20px 60px rgba(0,0,0,0.6);">
+            <h2 style="color:#fff;margin-bottom:12px;font-family:'Poppins',sans-serif;font-size:22px;font-weight:700;">🔒 Password Required</h2>
+            <p style="color:var(--muted);font-size:14px;margin-bottom:28px;">This meeting is password protected. Please enter the password to join.</p>
+            
+            <div style="margin-bottom:20px;">
+                <input type="password" id="meetingPassword" placeholder="Enter password" style="width:100%;padding:14px 16px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);border-radius:12px;color:#fff;font-family:Inter,sans-serif;font-size:15px;" onkeypress="if(event.key==='Enter') submitPassword()">
+            </div>
+
+            <div id="passwordError" style="display:none;color:#ef4444;font-size:13px;margin-bottom:16px;padding:10px;background:rgba(239,68,68,0.1);border-radius:8px;border-left:3px solid #ef4444;"></div>
+
+            <div style="display:flex;gap:12px;">
+                <button onclick="cancelPasswordEntry()" style="flex:1;padding:12px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);color:#fff;border-radius:10px;cursor:pointer;font-family:Poppins,sans-serif;font-weight:600;transition:all 0.3s;">Cancel</button>
+                <button id="submitPasswordBtn" onclick="submitPassword()" style="flex:1;padding:12px;background:linear-gradient(135deg,#6C63FF,#4F46E5);border:none;color:#fff;border-radius:10px;cursor:pointer;font-family:Poppins,sans-serif;font-weight:600;transition:all 0.3s;box-shadow:0 4px 16px rgba(108,99,255,0.3);">Join Meeting</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden data elements for behavioral tracking (no visible UI) -->
+    <span id="studyDuration" style="display:none;">0</span>
+    <span id="idleTime" style="display:none;">0</span>
+    <span id="tabSwitches" style="display:none;">0</span>
+    <span id="breakCount" style="display:none;">0</span>
+</div>
+
+<script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+<script>
+    const API_URL = 'http://localhost:5000/api';
+    const SOCKET_URL = 'http://localhost:5000';
+    const urlParams = new URLSearchParams(window.location.search);
+    const meetingId = urlParams.get('meetingId');
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user'));
+    const currentUserId = user && (user.id || user._id);
+    const tokenExpiry = localStorage.getItem('tokenExpiry');
+
+    if (!token || !user || !meetingId) { alert('Invalid session'); window.location.href = 'login.html'; }
+    if (tokenExpiry && Date.now() > parseInt(tokenExpiry)) {
+        ['token','user','tokenExpiry'].forEach(k => localStorage.removeItem(k));
+        window.location.href = 'login.html';
+    }
+
+    document.getElementById('meetingId').textContent = `Meeting ID: ${meetingId}`;
+    document.getElementById('localAvatar').textContent = (user.name || user.email)[0].toUpperCase();
+
+    // Timer
+    let timerSec = 0;
+    const timerEl = document.getElementById('timer');
+    setInterval(() => {
+        timerSec++;
+        const m = String(Math.floor(timerSec/60)).padStart(2,'0');
+        const s = String(timerSec%60).padStart(2,'0');
+        timerEl.textContent = `${m}:${s}`;
+    }, 1000);
+
+    const socket = io(SOCKET_URL, {
+        transports: ['websocket'],
+        upgrade: false,
+        reconnectionAttempts: 3,
+        timeout: 8000
+    });
+
+    const FAST_MEDIA_CONSTRAINTS = {
+        video: {
+            width: { ideal: 320, max: 640 },
+            height: { ideal: 180, max: 360 },
+            frameRate: { ideal: 15, max: 20 },
+            facingMode: 'user'
+        }
+        ,audio: true
+    };
+
+    const RELAXED_MEDIA_CONSTRAINTS = {
+        video: {
+            width: { ideal: 240 },
+            height: { ideal: 135 },
+            frameRate: { ideal: 10, max: 15 },
+            facingMode: 'user'
+        },
+        audio: true
+    };
+
+    const AUDIO_ONLY_CONSTRAINTS = {
+        video: false,
+        audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+        }
+    };
+    let localStream;
+    let peerConnections = {};
+    const remoteMediaState = {};
+    let cameraTrack = null;
+    let currentVideoTrack = null;
+    let screenStream = null;
+    let screenTrack = null;
+    let isScreenSharing = false;
+    let hasScreenSharePermission = false;
+    let screenShareRequestPending = false;
+    let activeScreenSharerSocketId = null;
+    let handRaised = false;
+    let soundNotificationEnabled = true; // Sound notification preference
+    let raisedStudents = {}; // Track raised hands per socketId for teacher acknowledgment
+    const configuration = {
+        iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' }
+        ],
+        iceCandidatePoolSize: 10,
+        bundlePolicy: 'max-bundle',
+        rtcpMuxPolicy: 'require'
+    };
+    let audioEnabled = true, videoEnabled = true, isSubmittingAnalytics = false;
+    let behavioralData = {
+        study_duration: 0,
+        study_duration_seconds: 0,
+        idle_time: 0,
+        idle_time_seconds: 0,
+        break_count: 0,
+        tab_switch_count: 0,
+        startTime: Date.now()
+    };
+    let isIdle = false, idleTimer, lastActivityTime = Date.now();
+    let waitingRoomPollInterval = null;
+    let roomSetupDone = false;
+    let socketListenersBound = false;
+    let pendingScreenShareRequests = [];
+    let activeScreenShareRequest = null;
+    let meetingEndingWarningShown = false;
+
+    init();
+
+    function configureRoleBasedWaitingRoomUI() {
+        const waitingPanel = document.getElementById('waitingRoomPanel');
+        const waitingBtn = document.getElementById('waitingRoomBtn');
+        const waitingOverlay = document.getElementById('waitingRoomOverlay');
+
+        if (user.role === 'student') {
+            if (waitingPanel) {
+                waitingPanel.classList.add('hidden');
+                waitingPanel.style.display = 'none';
+            }
+            if (waitingBtn) {
+                waitingBtn.style.display = 'none';
+            }
+            return;
+        }
+
+        if (waitingOverlay) {
+            waitingOverlay.style.display = 'none';
+        }
+    }
+
+    async function init() {
+        try {
+            configureRoleBasedWaitingRoomUI();
+
+            if (currentUserId) {
+                socket.emit('register-user', { userId: currentUserId });
+            }
+            setupSocketListeners();
+
+            // First, verify joining the meeting (including password check)
+            const joinResult = await verifyAndJoinMeeting();
+            if (joinResult && joinResult.inWaitingRoom && user.role === 'student') {
+                showWaitingRoomOverlay();
+                pollForAdmission();
+                return;
+            }
+
+            await startMediaWithFallback();
+        } catch (error) {
+            if (error.message === 'PASSWORD_REQUIRED' || error.message === 'INVALID_PASSWORD') {
+                // Password-related errors are handled in the password modal
+                return;
+            }
+            
+            if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+                const retry = confirm('Camera/Microphone permission denied.\n\nClick OK to join audio-only, or Cancel to go back.');
+                if (retry) { try { await requestMedia(AUDIO_ONLY_CONSTRAINTS); } catch { await joinWithoutMedia(); } }
+                else { window.location.href = user.role === 'teacher' ? 'teacher-dashboard.html' : 'student-dashboard.html'; }
+            } else if (error.name === 'NotFoundError') {
+                if (confirm('Camera/Microphone not found. Click OK to join in listen-only mode.')) await joinWithoutMedia();
+                else window.location.href = user.role === 'teacher' ? 'teacher-dashboard.html' : 'student-dashboard.html';
+            } else {
+                if (confirm(`Could not access camera/mic. Error: ${error.message}\n\nContinue without video/audio?`)) await joinWithoutMedia();
+                else window.location.href = user.role === 'teacher' ? 'teacher-dashboard.html' : 'student-dashboard.html';
+            }
+        }
+    }
+
+    async function verifyAndJoinMeeting() {
+        try {
+            const response = await fetch(`${API_URL}/meetings/join/${meetingId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({})
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                return data;
+            }
+
+            if (data.requiresPassword) {
+                // Show password modal
+                showPasswordModal();
+                throw new Error('PASSWORD_REQUIRED');
+            }
+
+            // Other errors
+            alert(data.message || 'Failed to join meeting');
+            window.location.href = user.role === 'teacher' ? 'teacher-dashboard.html' : 'student-dashboard.html';
+        } catch (error) {
+            if (error.message === 'PASSWORD_REQUIRED') {
+                throw error;
+            }
+            alert('Error verifying meeting: ' + error.message);
+            window.location.href = user.role === 'teacher' ? 'teacher-dashboard.html' : 'student-dashboard.html';
+        }
+    }
+
+    function showPasswordModal() {
+        const modal = document.getElementById('passwordModal');
+        const passwordInput = document.getElementById('meetingPassword');
+        const errorDiv = document.getElementById('passwordError');
+        
+        modal.style.display = 'flex';
+        passwordInput.value = '';
+        errorDiv.style.display = 'none';
+        errorDiv.textContent = '';
+        
+        // Focus on password input
+        setTimeout(() => passwordInput.focus(), 100);
+    }
+
+    async function submitPassword() {
+        const password = document.getElementById('meetingPassword').value;
+        const errorDiv = document.getElementById('passwordError');
+        const submitBtn = document.getElementById('submitPasswordBtn');
+        
+        if (!password) {
+            errorDiv.textContent = 'Please enter a password';
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Verifying...';
+
+        try {
+            const data = await verifyAndJoinMeetingWithPassword(password);
+
+            if (data.success) {
+                // Password is correct, close modal and continue
+                document.getElementById('passwordModal').style.display = 'none';
+
+                if (data.inWaitingRoom && user.role === 'student') {
+                    showWaitingRoomOverlay();
+                    pollForAdmission();
+                } else {
+                    await startMediaWithFallback();
+                }
+            } else {
+                // Password is incorrect
+                errorDiv.textContent = data.message || 'Invalid password. Please try again.';
+                errorDiv.style.display = 'block';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Join Meeting';
+                document.getElementById('meetingPassword').focus();
+            }
+        } catch (error) {
+            errorDiv.textContent = 'Error verifying password: ' + error.message;
+            errorDiv.style.display = 'block';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Join Meeting';
+        }
+    }
+
+    function cancelPasswordEntry() {
+        window.location.href = user.role === 'teacher' ? 'teacher-dashboard.html' : 'student-dashboard.html';
+    }
+
+    async function verifyAndJoinMeetingWithPassword(password) {
+        const response = await fetch(`${API_URL}/meetings/join/${meetingId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ password })
+        });
+        return response.json();
+    }
+
+    // Waiting Room Functions
+    async function checkWaitingRoomStatus() {
+        try {
+            const response = await fetch(`${API_URL}/meetings/waiting-room-status/${meetingId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            const data = await response.json();
+            return {
+                status: data.status,
+                inWaitingRoom: data.inWaitingRoom,
+                isActive: data.isActive
+            };
+        } catch (error) {
+            console.error('Check waiting room status error:', error);
+            return {
+                status: 'unknown',
+                inWaitingRoom: false,
+                isActive: false
+            };
+        }
+    }
+
+    function showWaitingRoomOverlay() {
+        if (user.role !== 'student') {
+            return;
+        }
+
+        const overlay = document.getElementById('waitingRoomOverlay');
+        if (overlay) {
+            overlay.style.display = 'flex';
+        }
+        const statusEl = document.getElementById('waitingRoomStatus');
+        if (statusEl) {
+            statusEl.textContent = 'Waiting...';
+        }
+    }
+
+    function hideWaitingRoomOverlay() {
+        const overlay = document.getElementById('waitingRoomOverlay');
+        if (overlay) {
+            overlay.style.display = 'none';
+        }
+    }
+
+    function leaveWaitingRoom() {
+        window.location.href = user.role === 'teacher' ? 'teacher-dashboard.html' : 'student-dashboard.html';
+    }
+
+    function processNextScreenShareRequest() {
+        if (user.role !== 'teacher') return;
+        if (activeScreenShareRequest || !pendingScreenShareRequests.length) return;
+
+        activeScreenShareRequest = pendingScreenShareRequests.shift();
+        const modal = document.getElementById('screenShareRequestModal');
+        const text = document.getElementById('screenShareRequestText');
+
+        if (text) {
+            text.textContent = `${activeScreenShareRequest.userName || 'A student'} requested to share screen.`;
+        }
+
+        if (modal) {
+            modal.style.display = 'flex';
+        }
+    }
+
+    function resolveCurrentScreenShareRequest(approved) {
+        if (user.role !== 'teacher' || !activeScreenShareRequest) {
+            return;
+        }
+
+        socket.emit('respond-screen-share-request', {
+            meetingId,
+            requesterSocketId: activeScreenShareRequest.requesterSocketId,
+            approved: Boolean(approved),
+            teacherName: user.name || user.email
+        });
+
+        addChatMessage('System', approved
+            ? `Approved screen-share request for ${activeScreenShareRequest.userName}`
+            : `Declined screen-share request for ${activeScreenShareRequest.userName}`);
+
+        const modal = document.getElementById('screenShareRequestModal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+
+        activeScreenShareRequest = null;
+        processNextScreenShareRequest();
+    }
+
+    function approveCurrentScreenShareRequest() {
+        resolveCurrentScreenShareRequest(true);
+    }
+
+    function rejectCurrentScreenShareRequest() {
+        resolveCurrentScreenShareRequest(false);
+    }
+
+    async function pollForAdmission() {
+        if (waitingRoomPollInterval) {
+            clearInterval(waitingRoomPollInterval);
+        }
+
+        waitingRoomPollInterval = setInterval(async () => {
+            try {
+                const status = await checkWaitingRoomStatus();
+
+                if (status.status === 'admitted') {
+                    clearInterval(waitingRoomPollInterval);
+                    waitingRoomPollInterval = null;
+                    hideWaitingRoomOverlay();
+                    await startMediaWithFallback();
+                } else if (status.status === 'rejected') {
+                    clearInterval(waitingRoomPollInterval);
+                    waitingRoomPollInterval = null;
+                    alert('Your request to join the meeting was rejected by the teacher.');
+                    window.location.href = user.role === 'teacher' ? 'teacher-dashboard.html' : 'student-dashboard.html';
+                }
+            } catch (error) {
+                console.error('Polling error:', error);
+            }
+        }, 2000); // Poll every 2 seconds
+    }
+
+    // Teacher: Waiting Room Management Functions
+    function toggleWaitingRoom() {
+        if (user.role !== 'teacher') return;
+        const panel = document.getElementById('waitingRoomPanel');
+        if (!panel) return;
+        panel.classList.toggle('hidden');
+        if (!panel.classList.contains('hidden')) {
+            refreshWaitingList();
+        }
+    }
+
+    async function refreshWaitingList() {
+        try {
+            const response = await fetch(`${API_URL}/meetings/waiting-room/${meetingId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            const data = await response.json();
+            if (!data.success) {
+                console.error('Failed to get waiting list:', data.message);
+                return;
+            }
+
+            const waitingCount = document.getElementById('waitingCount');
+            const waitingContent = document.getElementById('waitingRoomContent');
+            const waitingBadge = document.getElementById('waitingBadge');
+
+            if (!waitingCount || !waitingContent) {
+                return;
+            }
+
+            const waitingUsers = Array.isArray(data.waitingRoom) ? data.waitingRoom : [];
+
+            waitingCount.textContent = waitingUsers.length;
+            if (waitingBadge) {
+                waitingBadge.textContent = waitingUsers.length;
+                waitingBadge.style.display = waitingUsers.length > 0 ? 'flex' : 'none';
+            }
+
+            if (waitingUsers.length === 0) {
+                waitingContent.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px;font-size:13px;">No one waiting</div>';
+            } else {
+                waitingContent.innerHTML = waitingUsers.map(p => `
+                    <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:12px;display:flex;justify-content:space-between;align-items:center;">
+                        <div>
+                            <div style="font-weight:600;color:#fff;margin-bottom:4px;">${p.name}</div>
+                            <div style="font-size:11px;color:var(--muted);">Requested at ${new Date(p.joinedAt).toLocaleTimeString()}</div>
+                        </div>
+                        <div style="display:flex;gap:6px;">
+                            <button onclick="admitParticipant('${p.userId}')" style="padding:6px 10px;background:rgba(34,197,94,0.2);border:1px solid rgba(34,197,94,0.3);color:#86efac;border-radius:6px;font-size:11px;cursor:pointer;font-weight:600;">✓</button>
+                            <button onclick="rejectParticipant('${p.userId}')" style="padding:6px 10px;background:rgba(239,68,68,0.2);border:1px solid rgba(239,68,68,0.3);color:#fca5a5;border-radius:6px;font-size:11px;cursor:pointer;font-weight:600;">✕</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        } catch (error) {
+            console.error('Refresh waiting list error:', error);
+        }
+    }
+
+    async function admitParticipant(waitingUserId) {
+        try {
+            const response = await fetch(`${API_URL}/meetings/waiting-room/admit`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    meetingId,
+                    userId: waitingUserId
+                })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                showToast('✓ Participant admitted');
+                refreshWaitingList();
+            } else {
+                alert(data.message || 'Failed to admit participant');
+            }
+        } catch (error) {
+            console.error('Admit participant error:', error);
+            alert('Error admitting participant');
+        }
+    }
+
+    async function rejectParticipant(waitingUserId) {
+        try {
+            const response = await fetch(`${API_URL}/meetings/waiting-room/reject`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    meetingId,
+                    userId: waitingUserId
+                })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                showToast('✕ Participant rejected');
+                refreshWaitingList();
+            } else {
+                alert(data.message || 'Failed to reject participant');
+            }
+        } catch (error) {
+            console.error('Reject participant error:', error);
+            alert('Error rejecting participant');
+        }
+    }
+
+    async function admitAllWaiting() {
+        try {
+            const response = await fetch(`${API_URL}/meetings/waiting-room/admit-all`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ meetingId })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                showToast(`✓ Admitted ${data.admittedCount} participant(s)`);
+                refreshWaitingList();
+            } else {
+                alert(data.message || 'Failed to admit participants');
+            }
+        } catch (error) {
+            console.error('Admit all error:', error);
+            alert('Error admitting participants');
+        }
+    }
+
+    async function startMediaWithFallback() {
+        try {
+            await requestMedia(FAST_MEDIA_CONSTRAINTS);
+            return;
+        } catch (fastError) {
+            // Permission-denied should be handled by caller with user prompt
+            if (fastError.name === 'NotAllowedError' || fastError.name === 'PermissionDeniedError') {
+                throw fastError;
+            }
+        }
+
+        try {
+            await requestMedia(RELAXED_MEDIA_CONSTRAINTS);
+            return;
+        } catch (relaxedError) {
+            if (relaxedError.name === 'NotAllowedError' || relaxedError.name === 'PermissionDeniedError') {
+                throw relaxedError;
+            }
+        }
+
+        // Final automatic fallback before showing prompt
+        await requestMedia(AUDIO_ONLY_CONSTRAINTS);
+    }
+
+    async function requestMedia(constraints) {
+        localStream = await navigator.mediaDevices.getUserMedia(constraints);
+        cameraTrack = localStream.getVideoTracks()[0] || null;
+        currentVideoTrack = cameraTrack;
+        const localVideo = document.getElementById('localVideo');
+        localVideo.srcObject = localStream;
+        localVideo.setAttribute('playsinline', 'true');
+        localVideo.muted = true;
+        localVideo.play().catch(() => {});
+        if (!constraints.video) { videoEnabled = false; document.getElementById('cameraBtn').classList.add('off'); document.getElementById('cameraBtn').textContent = '📷'; showNoCam('localNoCam'); }
+        if (!constraints.audio) { audioEnabled = false; document.getElementById('micBtn').classList.add('muted'); document.getElementById('micBtn').textContent = '🔇'; }
+        setupRoom();
+    }
+
+    async function joinWithoutMedia() {
+        localStream = new MediaStream();
+        cameraTrack = null;
+        currentVideoTrack = null;
+        document.getElementById('localVideo').srcObject = localStream;
+        videoEnabled = false; audioEnabled = false;
+        document.getElementById('cameraBtn').textContent = '🚫'; document.getElementById('cameraBtn').disabled = true;
+        document.getElementById('micBtn').textContent = '🚫'; document.getElementById('micBtn').disabled = true;
+        showNoCam('localNoCam');
+        addChatMessage('System', 'You joined in listen-only mode');
+        setupRoom();
+    }
+
+    function showNoCam(id) { const el = document.getElementById(id); if (el) el.style.display = 'flex'; }
+
+    function setupRoom() {
+        if (roomSetupDone) {
+            return;
+        }
+        roomSetupDone = true;
+
+        socket.emit('join-room', { meetingId, userId: currentUserId || user.id, userName: user.name || user.email });
+        setupActivityTracking();
+        if (user.role === 'teacher') {
+            const shareBtn = document.getElementById('shareScreenBtn');
+            if (shareBtn) {
+                shareBtn.style.display = 'inline-flex';
+            }
+            const pollBtn = document.getElementById('pollBtn');
+            if (pollBtn) {
+                pollBtn.style.display = 'inline-flex';
+            }
+            const waitingBtn = document.getElementById('waitingRoomBtn');
+            if (waitingBtn) {
+                waitingBtn.style.display = 'inline-flex';
+            }
+            refreshWaitingList();
+            setInterval(refreshWaitingList, 5000);
+        }
+        if (user.role === 'student') {
+            const handBtn = document.getElementById('handBtn');
+            if (handBtn) {
+                handBtn.style.display = 'inline-flex';
+            }
+            const requestShareBtn = document.getElementById('requestShareBtn');
+            if (requestShareBtn) {
+                requestShareBtn.style.display = 'inline-flex';
+            }
+            startBehavioralTracking();
+            loadLatestPollState();
+        }
+    }
+
+    function updateParticipantCount() {
+        const count = document.querySelectorAll('.video-container').length;
+        document.getElementById('participantCount').textContent = `${count} participant${count !== 1 ? 's' : ''}`;
+    }
+
+    function setupSocketListeners() {
+        if (socketListenersBound) {
+            return;
+        }
+        socketListenersBound = true;
+
+        socket.on('user-joined', async ({ socketId, userName }) => {
+            addChatMessage('System', `${userName} joined the meeting`);
+            addRemoteVideo(socketId, userName);
+        });
+
+        // Waiting room events
+        socket.on('admitted', ({ meetingId: eventMeetingId, userId }) => {
+            if (eventMeetingId !== meetingId) return;
+            if (String(userId) === String(currentUserId || user.id)) {
+                addChatMessage('System', '✅ You have been admitted to the meeting');
+                hideWaitingRoomOverlay();
+                if (!roomSetupDone) {
+                    startMediaWithFallback().catch((error) => {
+                        console.error('Admission start media error:', error);
+                    });
+                }
+            }
+        });
+
+        socket.on('rejected', ({ meetingId: eventMeetingId, userId }) => {
+            if (eventMeetingId !== meetingId) return;
+            if (String(userId) === String(currentUserId || user.id)) {
+                addChatMessage('System', '❌ Your request to join was rejected');
+                alert('Your request to join the meeting was rejected by the teacher.');
+                setTimeout(() => {
+                    window.location.href = 'student-dashboard.html';
+                }, 2000);
+            }
+        });
+
+        socket.on('waiting_user_added', ({ meetingId: eventMeetingId }) => {
+            if (eventMeetingId !== meetingId) return;
+            if (user.role === 'teacher') {
+                refreshWaitingList();
+            }
+        });
+
+        socket.on('waiting-list-updated', ({ meetingId: eventMeetingId }) => {
+            if (eventMeetingId !== meetingId) return;
+            const panel = document.getElementById('waitingRoomPanel');
+            if (user.role === 'teacher' && panel && !panel.classList.contains('hidden')) {
+                refreshWaitingList();
+            }
+        });
+
+        socket.on('meeting-ending-warning', ({ meetingId: eventMeetingId, remainingMinutes, message }) => {
+            if (eventMeetingId !== meetingId || meetingEndingWarningShown) return;
+            meetingEndingWarningShown = true;
+
+            const warningText = message || `Meeting will auto-end in ${remainingMinutes || 10} minutes.`;
+            addChatMessage('System', `⚠️ ${warningText}`);
+            alert(warningText);
+        });
+
+        socket.on('meeting-auto-ended', ({ meetingId: eventMeetingId, message }) => {
+            if (eventMeetingId !== meetingId) return;
+
+            const endText = message || 'Meeting ended automatically after 2 hours.';
+            addChatMessage('System', `⏹️ ${endText}`);
+            alert(endText);
+            cleanup();
+            window.location.href = user.role === 'teacher' ? 'teacher-dashboard.html' : 'student-dashboard.html';
+        });
+
+        socket.on('screen-share-requested', ({ requesterSocketId, userName }) => {
+            if (user.role !== 'teacher') {
+                return;
+            }
+
+            pendingScreenShareRequests.push({ requesterSocketId, userName });
+            processNextScreenShareRequest();
+        });
+
+        socket.on('screen-share-request-response', ({ approved, teacherName }) => {
+            if (user.role !== 'student') {
+                return;
+            }
+
+            screenShareRequestPending = false;
+
+            const requestBtn = document.getElementById('requestShareBtn');
+            if (requestBtn) {
+                requestBtn.classList.remove('pending');
+                requestBtn.title = 'Request Screen Share';
+            }
+
+            if (!approved) {
+                addChatMessage('System', `${teacherName || 'Teacher'} declined your screen-share request`);
+                return;
+            }
+
+            hasScreenSharePermission = true;
+            const shareBtn = document.getElementById('shareScreenBtn');
+            if (shareBtn) {
+                shareBtn.style.display = 'inline-flex';
+            }
+
+            if (requestBtn) {
+                requestBtn.style.display = 'none';
+            }
+
+            addChatMessage('System', `${teacherName || 'Teacher'} approved your screen-share request`);
+        });
+
+        socket.on('screen-share-status', ({ sharerSocketId, userName, isSharing }) => {
+            updateScreenShareIndicator(isSharing, userName, sharerSocketId);
+        });
+
+        socket.on('offer', async ({ offer, from, userName }) => {
+            if (!document.getElementById(`container-${from}`)) addRemoteVideo(from, userName || 'User');
+            if (!peerConnections[from]) peerConnections[from] = createPeerConnection(from);
+            const pc = peerConnections[from];
+            try {
+                await pc.setRemoteDescription(new RTCSessionDescription(offer));
+                if (pc.iceCandidatesQueue?.length) { for (const c of pc.iceCandidatesQueue) await pc.addIceCandidate(new RTCIceCandidate(c)); pc.iceCandidatesQueue = []; }
+                const answer = await pc.createAnswer();
+                await pc.setLocalDescription(answer);
+                socket.emit('answer', { answer, to: from, userName: user.name || user.email });
+            } catch(e) { console.error('Offer handling error:', e); }
+        });
+
+        socket.on('answer', async ({ answer, from }) => {
+            const pc = peerConnections[from];
+            if (pc && pc.signalingState === 'have-local-offer') {
+                try {
+                    await pc.setRemoteDescription(new RTCSessionDescription(answer));
+                    if (pc.iceCandidatesQueue?.length) { for (const c of pc.iceCandidatesQueue) await pc.addIceCandidate(new RTCIceCandidate(c)); pc.iceCandidatesQueue = []; }
+                } catch(e) { console.error('Answer error:', e); }
+            }
+        });
+
+        socket.on('ice-candidate', async ({ candidate, from }) => {
+            const pc = peerConnections[from];
+            if (pc) {
+                if (pc.remoteDescription?.type && pc.signalingState !== 'closed') {
+                    try { await pc.addIceCandidate(new RTCIceCandidate(candidate)); } catch(e) {}
+                } else { if (!pc.iceCandidatesQueue) pc.iceCandidatesQueue = []; pc.iceCandidatesQueue.push(candidate); }
+            }
+        });
+
+        socket.on('user-left', ({ socketId, userName }) => {
+            addChatMessage('System', `${userName} left the meeting`);
+            if (peerConnections[socketId]) { peerConnections[socketId].close(); delete peerConnections[socketId]; }
+            delete remoteMediaState[socketId];
+            if (activeScreenSharerSocketId === socketId) {
+                updateScreenShareIndicator(false);
+            }
+            removeRemoteVideo(socketId);
+            updateParticipantCount();
+        });
+
+        socket.on('user-video-toggle', ({ socketId, enabled }) => {
+            if (!remoteMediaState[socketId]) {
+                remoteMediaState[socketId] = { hasVideoTrack: false, videoEnabled: true };
+            }
+
+            remoteMediaState[socketId].videoEnabled = enabled;
+            updateRemoteTileVisual(socketId);
+        });
+
+        socket.on('student-hand', ({ socketId, userName, raised }) => {
+            updateRemoteHandBadge(socketId, raised);
+
+            if (raised) {
+                raisedStudents[socketId] = { userName, raised: true };
+            } else {
+                delete raisedStudents[socketId];
+            }
+
+            if (user.role === 'teacher') {
+                const msg = raised
+                    ? `✋ ${userName} raised hand (click badge to acknowledge)`
+                    : `✅ ${userName} lowered hand`;
+                addChatMessage('System', msg);
+                
+                // Play sound notification for raised hands
+                if (raised) {
+                    playHandRaiseNotification();
+                }
+            }
+        });
+
+        // Handle teacher lowering a student's hand
+        socket.on('teacher-lower-hand', ({ studentSocketId, studentName }) => {
+            if (user.role === 'student' && socket.id === studentSocketId) {
+                // Student received acknowledgment
+                handRaised = false;
+                const handBtn = document.getElementById('handBtn');
+                if (handBtn) {
+                    handBtn.classList.remove('active');
+                    handBtn.textContent = '✋';
+                    handBtn.title = 'Raise Hand';
+                }
+                addChatMessage('System', '✅ Teacher acknowledged your raised hand');
+            } else if (user.role === 'teacher') {
+                // Teacher sees notification
+                addChatMessage('System', `📍 You acknowledged ${studentName}'s raised hand`);
+            }
+        });
+
+        socket.on('chat-message', ({ userName, message }) => addChatMessage(userName, message));
+        socket.on('chat-file', ({ userName, file }) => addChatFileMessage(userName, file));
+
+        socket.on('room-users', async (users) => {
+            const offerTasks = [];
+
+            for (const u of users) {
+                if (u.socketId === socket.id) continue;
+                addRemoteVideo(u.socketId, u.userName);
+                const pc = createPeerConnection(u.socketId);
+                peerConnections[u.socketId] = pc;
+
+                offerTasks.push((async () => {
+                    try {
+                        const offer = await pc.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true });
+                        await pc.setLocalDescription(offer);
+                        socket.emit('offer', { offer, to: u.socketId, userName: user.name || user.email });
+                    } catch (e) {
+                        console.error(e);
+                    }
+                })());
+            }
+
+            if (offerTasks.length) {
+                await Promise.allSettled(offerTasks);
+            }
+        });
+    }
+
+    function createPeerConnection(socketId) {
+        const pc = new RTCPeerConnection(configuration);
+        pc.iceCandidatesQueue = [];
+        if (localStream?.getAudioTracks().length) {
+            localStream.getAudioTracks().forEach((t) => pc.addTrack(t, localStream));
+        }
+
+        if (currentVideoTrack) {
+            pc.addTrack(currentVideoTrack, new MediaStream([currentVideoTrack]));
+        }
+
+        pc.onicecandidate = e => { if (e.candidate) socket.emit('ice-candidate', { candidate: e.candidate, to: socketId }); };
+        pc.ontrack = e => {
+            const video = document.getElementById(`video-${socketId}`);
+
+            if (!remoteMediaState[socketId]) {
+                remoteMediaState[socketId] = { hasVideoTrack: false, videoEnabled: true };
+            }
+
+            if (e.track && e.track.kind === 'video') {
+                remoteMediaState[socketId].hasVideoTrack = true;
+            }
+
+            if (video && e.streams?.[0] && e.track && e.track.kind === 'video') {
+                video.srcObject = e.streams[0];
+                video.play().catch(() => {});
+            }
+
+            updateRemoteTileVisual(socketId);
+        };
+        return pc;
+    }
+
+    function updateRemoteTileVisual(socketId) {
+        const noCam = document.getElementById(`nocam-${socketId}`);
+        const state = remoteMediaState[socketId];
+
+        if (!noCam || !state) {
+            return;
+        }
+
+        const shouldShowNoCam = !state.hasVideoTrack || state.videoEnabled === false;
+        noCam.style.display = shouldShowNoCam ? 'flex' : 'none';
+    }
+
+    function updateRemoteHandBadge(socketId, raised) {
+        const handBadge = document.getElementById(`hand-${socketId}`);
+        if (!handBadge) {
+            return;
+        }
+        
+        if (raised) {
+            handBadge.style.display = 'inline-flex';
+            handBadge.style.cursor = user.role === 'teacher' ? 'pointer' : 'default';
+            
+            // Add click handler for teacher acknowledgment
+            if (user.role === 'teacher') {
+                handBadge.onclick = (e) => {
+                    e.stopPropagation();
+                    teacherAcknowledgeHand(socketId);
+                };
+            }
+        } else {
+            handBadge.style.display = 'none';
+        }
+    }
+
+    // Teacher acknowledges a student's raised hand
+    function teacherAcknowledgeHand(studentSocketId) {
+        if (user.role !== 'teacher') return;
+        
+        const student = raisedStudents[studentSocketId];
+        if (!student) return;
+        
+        socket.emit('teacher-acknowledge-hand', {
+            meetingId,
+            studentSocketId,
+            studentName: student.userName
+        });
+    }
+
+    function addRemoteVideo(socketId, userName) {
+        if (document.getElementById(`container-${socketId}`)) return;
+        const grid = document.getElementById('videoGrid');
+        const div = document.createElement('div');
+        div.className = 'video-container';
+        div.id = `container-${socketId}`;
+
+        remoteMediaState[socketId] = { hasVideoTrack: false, videoEnabled: true };
+
+        const initials = (userName || 'U')[0].toUpperCase();
+        div.innerHTML = `
+            <video id="video-${socketId}" autoplay playsinline muted></video>
+            <div class="video-no-cam" id="nocam-${socketId}" style="display:none;">
+                <div class="video-avatar">${initials}</div>
+                <div class="video-name">${userName}</div>
+            </div>
+            <div class="hand-badge" id="hand-${socketId}">✋ Hand Raised</div>
+            <div class="video-label">${userName}</div>
+        `;
+        grid.appendChild(div);
+        updateParticipantCount();
+        const video = document.getElementById(`video-${socketId}`);
+        // Show avatar only while waiting; hide it as soon as metadata loads (stream active)
+        const noCam = document.getElementById(`nocam-${socketId}`);
+        // Briefly show avatar while connecting, hide when stream starts
+        if (noCam) noCam.style.display = 'flex'; // show avatar while stream not yet arrived
+        video.onloadedmetadata = () => {
+            video.play().catch(() => {});
+        };
+
+        updateRemoteTileVisual(socketId);
+    }
+
+    function removeRemoteVideo(socketId) {
+        const el = document.getElementById(`container-${socketId}`);
+        if (el) el.remove();
+    }
+
+    function toggleMic() {
+        if (!localStream?.getAudioTracks().length) return;
+        audioEnabled = !audioEnabled;
+        localStream.getAudioTracks().forEach(t => t.enabled = audioEnabled);
+        const btn = document.getElementById('micBtn');
+        btn.textContent = audioEnabled ? '🎤' : '🔇';
+        btn.classList.toggle('muted', !audioEnabled);
+        socket.emit('toggle-audio', { meetingId, enabled: audioEnabled });
+    }
+
+    function toggleCamera() {
+        if (isScreenSharing) {
+            alert('Stop screen sharing first to control camera.');
+            return;
+        }
+
+        if (!localStream?.getVideoTracks().length) return;
+        videoEnabled = !videoEnabled;
+        localStream.getVideoTracks().forEach(t => t.enabled = videoEnabled);
+        const btn = document.getElementById('cameraBtn');
+        btn.textContent = videoEnabled ? '📹' : '📷';
+        btn.classList.toggle('off', !videoEnabled);
+        const noCam = document.getElementById('localNoCam');
+        if (noCam) noCam.style.display = videoEnabled ? 'none' : 'flex';
+        socket.emit('toggle-video', { meetingId, enabled: videoEnabled });
+    }
+
+    function toggleSoundNotification() {
+        soundNotificationEnabled = !soundNotificationEnabled;
+        const soundBtn = document.getElementById('soundBtn');
+        if (soundBtn) {
+            soundBtn.classList.toggle('muted', !soundNotificationEnabled);
+            soundBtn.title = soundNotificationEnabled ? 'Sound Notifications: ON' : 'Sound Notifications: OFF';
+            soundBtn.textContent = soundNotificationEnabled ? '🔔' : '🔕';
+        }
+        
+        // Show toast notification
+        const msg = soundNotificationEnabled ? 'Sound notifications enabled' : 'Sound notifications disabled';
+        const t = document.createElement('div');
+        t.textContent = msg;
+        t.style.cssText = 'position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:rgba(22,26,64,0.95);border:1px solid rgba(108,99,255,0.3);color:#EEF0FF;padding:12px 24px;border-radius:12px;font-size:14px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.4);font-family:Inter,sans-serif;';
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 2000);
+    }
+
+    async function replaceOutgoingVideoTrack(newTrack) {
+        const replaceTasks = Object.values(peerConnections).map(async (pc) => {
+            const sender = pc.getSenders().find((s) => s.track && s.track.kind === 'video');
+
+            if (sender) {
+                await sender.replaceTrack(newTrack || null);
+            } else if (newTrack) {
+                pc.addTrack(newTrack, new MediaStream([newTrack]));
+            }
+        });
+
+        await Promise.allSettled(replaceTasks);
+    }
+
+    function updateScreenShareIndicator(isSharing, userName, sharerSocketId) {
+        const indicator = document.getElementById('screenShareIndicator');
+        if (!indicator) {
+            return;
+        }
+
+        if (!isSharing) {
+            indicator.style.display = 'none';
+            indicator.textContent = '🖥️ Screen sharing active';
+            activeScreenSharerSocketId = null;
+            return;
+        }
+
+        activeScreenSharerSocketId = sharerSocketId || null;
+        indicator.style.display = 'inline-flex';
+        indicator.textContent = `🖥️ ${userName || 'Participant'} is sharing screen`;
+    }
+
+    function requestScreenSharePermission() {
+        if (user.role !== 'student') {
+            return;
+        }
+
+        if (hasScreenSharePermission) {
+            alert('You already have permission. Use the screen share button to start sharing.');
+            return;
+        }
+
+        if (screenShareRequestPending) {
+            alert('Screen share request already sent. Please wait for teacher response.');
+            return;
+        }
+
+        screenShareRequestPending = true;
+        const requestBtn = document.getElementById('requestShareBtn');
+        if (requestBtn) {
+            requestBtn.classList.add('pending');
+            requestBtn.title = 'Request Pending';
+        }
+
+        socket.emit('request-screen-share', {
+            meetingId,
+            userName: user.name || user.email
+        });
+
+        addChatMessage('System', 'Screen share permission requested from teacher');
+    }
+
+    async function toggleScreenShare() {
+        if (user.role !== 'teacher' && user.role !== 'student') {
+            return;
+        }
+
+        if (user.role === 'student' && !hasScreenSharePermission) {
+            alert('Ask the teacher for screen-share permission first.');
+            return;
+        }
+
+        if (!isScreenSharing && activeScreenSharerSocketId && activeScreenSharerSocketId !== socket.id) {
+            alert('Another participant is currently sharing screen. Please wait.');
+            return;
+        }
+
+        if (isScreenSharing) {
+            await stopScreenShare();
+            return;
+        }
+
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+            alert('Screen sharing is not supported in this browser.');
+            return;
+        }
+
+        try {
+            screenStream = await navigator.mediaDevices.getDisplayMedia({
+                video: {
+                    frameRate: { ideal: 10, max: 15 }
+                },
+                audio: false
+            });
+
+            screenTrack = screenStream.getVideoTracks()[0];
+            if (!screenTrack) {
+                throw new Error('No screen track available');
+            }
+
+            await replaceOutgoingVideoTrack(screenTrack);
+            currentVideoTrack = screenTrack;
+            isScreenSharing = true;
+
+            const localVideo = document.getElementById('localVideo');
+            localVideo.srcObject = new MediaStream([screenTrack, ...(localStream?.getAudioTracks() || [])]);
+            localVideo.play().catch(() => {});
+
+            const localNoCam = document.getElementById('localNoCam');
+            if (localNoCam) {
+                localNoCam.style.display = 'none';
+            }
+
+            const shareBtn = document.getElementById('shareScreenBtn');
+            if (shareBtn) {
+                shareBtn.classList.add('active');
+                shareBtn.textContent = '🛑';
+                shareBtn.title = 'Stop Sharing';
+            }
+
+            socket.emit('screen-share-status', {
+                meetingId,
+                isSharing: true,
+                userName: user.name || user.email
+            });
+            updateScreenShareIndicator(true, user.name || user.email, socket.id);
+
+            addChatMessage('System', `${user.name || user.email} started screen sharing`);
+
+            screenTrack.onended = async () => {
+                await stopScreenShare(true);
+            };
+        } catch (error) {
+            console.error('Screen share error:', error);
+            alert('Could not start screen sharing. Please try again.');
+        }
+    }
+
+    async function stopScreenShare(triggeredByBrowser = false) {
+        if (!isScreenSharing) {
+            return;
+        }
+
+        if (screenTrack) {
+            screenTrack.onended = null;
+        }
+
+        if (screenStream) {
+            screenStream.getTracks().forEach((track) => track.stop());
+        }
+
+        screenStream = null;
+        screenTrack = null;
+        isScreenSharing = false;
+
+        currentVideoTrack = videoEnabled ? cameraTrack : null;
+        await replaceOutgoingVideoTrack(currentVideoTrack);
+
+        const localVideo = document.getElementById('localVideo');
+        localVideo.srcObject = localStream;
+        localVideo.play().catch(() => {});
+
+        const localNoCam = document.getElementById('localNoCam');
+        if (localNoCam) {
+            localNoCam.style.display = currentVideoTrack ? 'none' : 'flex';
+        }
+
+        const shareBtn = document.getElementById('shareScreenBtn');
+        if (shareBtn) {
+            shareBtn.classList.remove('active');
+            shareBtn.textContent = '🖥️';
+            shareBtn.title = 'Share Screen';
+        }
+
+        socket.emit('screen-share-status', {
+            meetingId,
+            isSharing: false,
+            userName: user.name || user.email
+        });
+        updateScreenShareIndicator(false);
+
+        if (!triggeredByBrowser) {
+            addChatMessage('System', `${user.name || user.email} stopped screen sharing`);
+        }
+    }
+
+    function toggleChat() {
+        document.getElementById('chatPanel').classList.toggle('hidden');
+    }
+
+    // Play notification sound when student raises hand (teacher receives)
+    function playHandRaiseNotification() {
+        if (!soundNotificationEnabled) return;
+        
+        try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const now = audioContext.currentTime;
+            
+            // Create two beeps: high then low
+            const osc1 = audioContext.createOscillator();
+            const osc2 = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            
+            osc1.frequency.value = 800;
+            osc2.frequency.value = 600;
+            gain.gain.setValueAtTime(0.3, now);
+            gain.gain.setValueAtTime(0, now + 0.2);
+            
+            osc1.connect(gain);
+            osc2.connect(gain);
+            gain.connect(audioContext.destination);
+            
+            osc1.start(now);
+            osc1.stop(now + 0.1);
+            osc2.start(now + 0.1);
+            osc2.stop(now + 0.2);
+        } catch (e) {
+            console.log('Audio notification not available:', e);
+        }
+    }
+
+    function toggleChat() {
+        document.getElementById('chatPanel').classList.toggle('hidden');
+    }
+
+    function toggleHandRaise() {
+        if (user.role !== 'student') {
+            return;
+        }
+
+        handRaised = !handRaised;
+        const handBtn = document.getElementById('handBtn');
+        if (handBtn) {
+            handBtn.classList.toggle('active', handRaised);
+            handBtn.title = handRaised ? 'Lower Hand' : 'Raise Hand';
+            handBtn.textContent = handRaised ? '🖐️' : '✋';
+        }
+
+        socket.emit('student-hand', {
+            meetingId,
+            raised: handRaised,
+            userName: user.name || user.email
+        });
+
+        addChatMessage('System', handRaised ? 'You raised your hand' : 'You lowered your hand');
+    }
+
+    function sendMessage() {
+        const input = document.getElementById('chatInput');
+        const message = input.value.trim();
+        if (message) { socket.emit('chat-message', { meetingId, message, userName: user.name || user.email }); input.value = ''; }
+    }
+
+    function triggerChatFilePicker() {
+        const input = document.getElementById('chatFileInput');
+        if (input) {
+            input.click();
+        }
+    }
+
+    async function handleChatFileSelected(event) {
+        const input = event.target;
+        const file = input.files && input.files[0];
+        if (!file) {
+            return;
+        }
+
+        const maxSize = 10 * 1024 * 1024;
+        if (file.size > maxSize) {
+            alert('File too large. Maximum size is 10 MB.');
+            input.value = '';
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const res = await fetch(`${API_URL}/meetings/chat-upload/${meetingId}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData
+            });
+
+            const data = await res.json();
+            if (!res.ok || !data.success) {
+                alert(data.message || 'Failed to upload file');
+                input.value = '';
+                return;
+            }
+
+            socket.emit('chat-file', {
+                meetingId,
+                userName: user.name || user.email,
+                file: data.file
+            });
+        } catch (error) {
+            console.error('Chat file upload error:', error);
+            alert('Could not upload file. Please try again.');
+        } finally {
+            input.value = '';
+        }
+    }
+
+    function addChatMessage(sender, message) {
+        const container = document.getElementById('chatMessages');
+        const el = document.createElement('div');
+        const isOwn = sender === (user.name || user.email);
+        el.className = `chat-message${isOwn ? ' own' : ''}`;
+        const isSystem = sender === 'System';
+        el.innerHTML = isSystem
+            ? `<div style="text-align:center;font-size:11px;color:var(--muted);padding:4px 0;">${message}</div>`
+            : `<div class="sender">${sender}</div><div class="text">${message}</div>`;
+        container.appendChild(el);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function addChatFileMessage(sender, file) {
+        const container = document.getElementById('chatMessages');
+        const el = document.createElement('div');
+        const isOwn = sender === (user.name || user.email);
+        el.className = `chat-message${isOwn ? ' own' : ''}`;
+
+        const fileName = escapeHtml(file?.name || 'file');
+        const fileUrl = file?.url || '#';
+        const fileSizeKb = Math.max(1, Math.round((file?.size || 0) / 1024));
+
+        const fileContent = file?.isImage
+            ? `<div class="chat-file-card"><a href="${fileUrl}" target="_blank" rel="noopener noreferrer"><img src="${fileUrl}" alt="${fileName}" class="chat-image-preview"></a><a href="${fileUrl}" target="_blank" rel="noopener noreferrer" download>${fileName}</a><div class="chat-file-meta">${fileSizeKb} KB</div></div>`
+            : `<div class="chat-file-card"><div style="font-size:18px;margin-bottom:6px;">📄</div><a href="${fileUrl}" target="_blank" rel="noopener noreferrer" download>${fileName}</a><div class="chat-file-meta">${fileSizeKb} KB</div></div>`;
+
+        el.innerHTML = `<div class="sender">${escapeHtml(sender)}</div>${fileContent}`;
+        container.appendChild(el);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function escapeHtml(value) {
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function leaveMeeting() {
+        if (user.role === 'student') { endSessionWithAnalytics(); return; }
+        if (confirm('Leave the meeting?')) { cleanup(); window.location.href = 'teacher-dashboard.html'; }
+    }
+
+    // ── POLL FUNCTIONS ──
+    let currentPollId = null;
+    let currentPoll = null;
+    let pollOptions = [{ id: 'opt-0', text: '' }, { id: 'opt-1', text: '' }];
+    const submittedPollIds = new Set();
+
+    function setPollPanelOpen(open) {
+        const panel = document.getElementById('pollPanel');
+        if (!panel) return;
+        panel.classList.toggle('hidden', !open);
+    }
+
+    function openPollMenu() {
+        if (user.role !== 'teacher') return;
+
+        document.getElementById('pollTitle').value = '';
+        document.getElementById('pollQuestion').value = '';
+        document.getElementById('showResultsCheckbox').checked = false;
+        pollOptions = [{ id: 'opt-0', text: '' }, { id: 'opt-1', text: '' }];
+        renderPollOptions();
+
+        document.getElementById('pollModal').style.display = 'flex';
+    }
+
+    function closePollModal() {
+        document.getElementById('pollModal').style.display = 'none';
+    }
+
+    function renderPollOptions() {
+        const container = document.getElementById('pollOptions');
+        if (!container) return;
+
+        container.innerHTML = pollOptions.map((opt, idx) => `
+            <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center;">
+                <input type="text" placeholder="Option ${idx + 1}" value="${escapeHtml(opt.text)}" onchange="updatePollOption(${idx}, this.value)" style="flex:1;padding:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;font-family:Inter,sans-serif;font-size:13px;">
+                ${pollOptions.length > 2 ? `<button onclick="removePollOption(${idx})" style="padding:6px 10px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.2);color:#fca5a5;border-radius:6px;cursor:pointer;font-size:12px;">Remove</button>` : ''}
+            </div>
+        `).join('');
+    }
+
+    function updatePollOption(idx, text) {
+        if (pollOptions[idx]) {
+            pollOptions[idx].text = text;
+        }
+    }
+
+    function removePollOption(idx) {
+        if (pollOptions.length > 2) {
+            pollOptions.splice(idx, 1);
+            renderPollOptions();
+        }
+    }
+
+    function addPollOption() {
+        pollOptions.push({ id: `opt-${Date.now()}-${pollOptions.length}`, text: '' });
+        renderPollOptions();
+    }
+
+    async function submitPoll() {
+        const title = document.getElementById('pollTitle').value.trim();
+        const question = document.getElementById('pollQuestion').value.trim();
+        const showResults = document.getElementById('showResultsCheckbox').checked;
+        const cleanedOptions = pollOptions.map((opt) => opt.text.trim()).filter(Boolean);
+        const normalizedSet = new Set(cleanedOptions.map((opt) => opt.toLowerCase()));
+
+        if (!title || !question || cleanedOptions.length < 2) {
+            alert('Please provide title, question, and at least 2 options.');
+            return;
+        }
+
+        if (normalizedSet.size !== cleanedOptions.length) {
+            alert('Poll options must be unique.');
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API_URL}/polls/create`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    meetingId,
+                    title,
+                    question,
+                    options: cleanedOptions,
+                    showResultsToStudents: showResults
+                })
+            });
+
+            const data = await res.json();
+            if (!data.success) {
+                alert(data.message || 'Failed to create poll');
+                return;
+            }
+
+            currentPollId = data.poll.pollId;
+            currentPoll = {
+                ...data.poll,
+                isActive: data.poll.isActive !== false,
+                showResultsToStudents: data.poll.showResultsToStudents === true
+            };
+
+            closePollModal();
+            addChatMessage('System', `📊 ${title} poll started`);
+            displayPoll(currentPoll, { openPanel: true });
+
+            socket.emit('create-poll', {
+                meetingId,
+                pollId: data.poll.pollId,
+                title: data.poll.title,
+                question: data.poll.question,
+                options: data.poll.options,
+                showResultsToStudents: data.poll.showResultsToStudents,
+                isActive: data.poll.isActive
+            });
+        } catch (err) {
+            console.error('Poll creation error:', err);
+            alert('Error creating poll');
+        }
+    }
+
+    async function loadLatestPollState() {
+        try {
+            const res = await fetch(`${API_URL}/polls/meeting/${meetingId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            const data = await res.json();
+            if (!data.success || !Array.isArray(data.polls) || data.polls.length === 0) {
+                return;
+            }
+
+            const activePoll = data.polls.find((p) => p.isActive);
+            const visibleClosedPoll = data.polls.find((p) => !p.isActive && p.showResultsToStudents);
+            const pollToShow = activePoll || visibleClosedPoll;
+
+            if (!pollToShow) {
+                return;
+            }
+
+            currentPollId = pollToShow.pollId;
+            currentPoll = {
+                pollId: pollToShow.pollId,
+                title: pollToShow.title,
+                question: pollToShow.question,
+                options: Array.isArray(pollToShow.options) ? pollToShow.options : [],
+                isActive: pollToShow.isActive !== false,
+                showResultsToStudents: pollToShow.showResultsToStudents === true
+            };
+
+            displayPoll(currentPoll, { openPanel: true });
+
+            if (user.role === 'student' && currentPoll.isActive === false && currentPoll.showResultsToStudents) {
+                await refreshPollResults(currentPoll.pollId, true);
+            }
+        } catch (error) {
+            console.error('Load latest poll state error:', error);
+        }
+    }
+
+    function displayPoll(poll, { openPanel = true } = {}) {
+        const content = document.getElementById('pollContent');
+        if (!content) return;
+
+        if (openPanel) {
+            setPollPanelOpen(true);
+        }
+
+        if (user.role === 'teacher') {
+            content.innerHTML = `
+                <div style="color:#fff;">
+                    <h3 style="font-family:'Poppins',sans-serif;margin-bottom:12px;font-size:16px;">${escapeHtml(poll.title || 'Live Poll')}</h3>
+                    <p style="color:var(--muted);margin-bottom:16px;font-size:14px;">${escapeHtml(poll.question || '')}</p>
+
+                    <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">Status: ${poll.isActive === false ? 'Closed' : 'Active'} | Results visible to students: ${poll.showResultsToStudents ? 'Yes' : 'No'}</div>
+
+                    <div id="pollResults" style="margin-bottom:16px;">
+                        <div style="color:var(--muted);text-align:center;padding:20px;font-size:12px;">Loading results...</div>
+                    </div>
+
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                        <button onclick="refreshPollResults('${poll.pollId}')" style="flex:1;min-width:120px;padding:10px;background:rgba(108,99,255,0.15);border:1px solid rgba(108,99,255,0.2);color:#A78BFA;border-radius:8px;cursor:pointer;font-family:Inter,sans-serif;font-size:12px;">🔄 Refresh</button>
+                        <button onclick="toggleResultsVisibility('${poll.pollId}')" style="flex:1;min-width:120px;padding:10px;background:rgba(108,99,255,0.15);border:1px solid rgba(108,99,255,0.2);color:#A78BFA;border-radius:8px;cursor:pointer;font-family:Inter,sans-serif;font-size:12px;">👁️ Toggle Results</button>
+                        <button onclick="exportPollResults('${poll.pollId}')" style="flex:1;min-width:120px;padding:10px;background:rgba(108,99,255,0.15);border:1px solid rgba(108,99,255,0.2);color:#A78BFA;border-radius:8px;cursor:pointer;font-family:Inter,sans-serif;font-size:12px;">📥 Export</button>
+                        <button onclick="closePollQuestion('${poll.pollId}')" ${poll.isActive === false ? 'disabled' : ''} style="flex:1;min-width:120px;padding:10px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.2);color:#fca5a5;border-radius:8px;cursor:${poll.isActive === false ? 'not-allowed' : 'pointer'};opacity:${poll.isActive === false ? 0.65 : 1};font-family:Inter,sans-serif;font-size:12px;">⏹ Close</button>
+                    </div>
+                </div>
+            `;
+
+            refreshPollResults(poll.pollId);
+            return;
+        }
+
+        if (submittedPollIds.has(poll.pollId)) {
+            content.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px;">✅ You already submitted this poll.</div>';
+            return;
+        }
+
+        if (poll.isActive === false) {
+            if (poll.showResultsToStudents) {
+                refreshPollResults(poll.pollId, true);
+            } else {
+                content.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px;">Poll is closed. Results are hidden by teacher.</div>';
+            }
+            return;
+        }
+
+        content.innerHTML = `
+            <div style="color:#fff;">
+                <h3 style="font-family:'Poppins',sans-serif;margin-bottom:12px;font-size:16px;">${escapeHtml(poll.title || 'Live Poll')}</h3>
+                <p style="color:var(--muted);margin-bottom:20px;font-size:14px;">${escapeHtml(poll.question || '')}</p>
+
+                <div id="pollAnswerOptions" style="display:flex;flex-direction:column;gap:10px;">
+                    ${(poll.options || []).map((opt) => `
+                        <button class="poll-option-btn" data-poll-id="${escapeHtml(poll.pollId)}" data-option-id="${escapeHtml(opt.optionId)}" style="padding:12px;background:rgba(108,99,255,0.15);border:1px solid rgba(108,99,255,0.2);color:#fff;border-radius:10px;cursor:pointer;font-family:Inter,sans-serif;text-align:left;transition:all 0.2s;">${escapeHtml(opt.text)}</button>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+
+        content.querySelectorAll('.poll-option-btn').forEach((btn) => {
+            btn.addEventListener('click', () => submitPollAnswer(btn.dataset.pollId, btn.dataset.optionId, btn));
+        });
+    }
+
+    async function submitPollAnswer(pollId, optionId, clickedButton) {
+        try {
+            if (clickedButton) {
+                clickedButton.disabled = true;
+            }
+
+            const res = await fetch(`${API_URL}/polls/submit-answer`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    pollId,
+                    meetingId,
+                    selectedOptionId: optionId
+                })
+            });
+
+            const data = await res.json();
+            if (!data.success) {
+                alert(data.message || 'Failed to submit answer');
+                if (clickedButton) clickedButton.disabled = false;
+                return;
+            }
+
+            submittedPollIds.add(pollId);
+            addChatMessage('System', '✅ Your answer has been submitted');
+
+            socket.emit('poll-answer-submitted', {
+                meetingId,
+                pollId,
+                userName: user.name || user.email
+            });
+
+            document.getElementById('pollContent').innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px;">✅ Poll submitted! Waiting for teacher action.</div>';
+        } catch (err) {
+            console.error('Answer submission error:', err);
+            alert('Error submitting answer');
+            if (clickedButton) clickedButton.disabled = false;
+        }
+    }
+
+    async function refreshPollResults(pollId, renderForStudent = false) {
+        try {
+            const res = await fetch(`${API_URL}/polls/${pollId}/results`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            const data = await res.json();
+            if (!data.success) {
+                if (user.role === 'teacher') {
+                    renderPollResults({ totalResponses: 0, options: {} });
+                }
+                return null;
+            }
+
+            if (currentPollId === pollId && currentPoll) {
+                currentPoll.showResultsToStudents = data.results.showResultsToStudents === true;
+                currentPoll.isActive = data.results.isActive !== false;
+            }
+
+            if (renderForStudent && user.role === 'student') {
+                renderStudentPollResults(data.results);
+            } else if (user.role === 'teacher') {
+                renderPollResults(data.results);
+            }
+
+            return data.results;
+        } catch (err) {
+            console.error('Results fetch error:', err);
+            return null;
+        }
+    }
+
+    function renderPollResults(results) {
+        const resultsDiv = document.getElementById('pollResults');
+        if (!resultsDiv) return;
+
+        const optionRows = Object.values(results.options || {}).map((opt) => `
+            <div style="margin-bottom:12px;">
+                <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                    <span style="font-size:13px;">${escapeHtml(opt.text)}</span>
+                    <span style="color:var(--muted);font-size:11px;">${opt.count} (${opt.percentage}%)</span>
+                </div>
+                <div style="height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;">
+                    <div style="height:100%;background:linear-gradient(90deg,#6C63FF,#A78BFA);width:${opt.percentage}%;transition:width 0.3s;"></div>
+                </div>
+            </div>
+        `).join('');
+
+        resultsDiv.innerHTML = `
+            <div>
+                <div style="color:var(--muted);font-size:12px;margin-bottom:12px;">Responses: ${results.totalResponses || 0}</div>
+                ${optionRows || '<div style="color:var(--muted);font-size:12px;">No options found.</div>'}
+            </div>
+        `;
+    }
+
+    function renderStudentPollResults(results) {
+        const content = document.getElementById('pollContent');
+        if (!content) return;
+
+        const optionRows = Object.values(results.options || {}).map((opt) => `
+            <div style="margin-bottom:12px;">
+                <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                    <span style="font-size:13px;">${escapeHtml(opt.text)}</span>
+                    <span style="color:var(--muted);font-size:11px;">${opt.count} (${opt.percentage}%)</span>
+                </div>
+                <div style="height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;">
+                    <div style="height:100%;background:linear-gradient(90deg,#22c55e,#10b981);width:${opt.percentage}%;transition:width 0.3s;"></div>
+                </div>
+            </div>
+        `).join('');
+
+        content.innerHTML = `
+            <div style="color:#fff;">
+                <h3 style="font-family:'Poppins',sans-serif;margin-bottom:12px;font-size:16px;">${escapeHtml(results.title || 'Poll Results')}</h3>
+                <p style="color:var(--muted);margin-bottom:16px;font-size:14px;">${escapeHtml(results.question || '')}</p>
+                <div style="color:var(--muted);font-size:12px;margin-bottom:12px;">Responses: ${results.totalResponses || 0}</div>
+                ${optionRows || '<div style="color:var(--muted);font-size:12px;">No results yet.</div>'}
+            </div>
+        `;
+    }
+
+    async function toggleResultsVisibility(pollId) {
+        try {
+            const currentVisibility = currentPoll && currentPoll.pollId === pollId
+                ? currentPoll.showResultsToStudents === true
+                : false;
+
+            const res = await fetch(`${API_URL}/polls/${pollId}/visibility`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ showResults: !currentVisibility })
+            });
+
+            const data = await res.json();
+            if (!data.success) {
+                alert(data.message || 'Failed to update visibility');
+                return;
+            }
+
+            if (currentPoll && currentPoll.pollId === pollId) {
+                currentPoll.showResultsToStudents = data.poll.showResultsToStudents;
+            }
+
+            addChatMessage('System', `👁️ Poll results are now ${data.poll.showResultsToStudents ? 'visible' : 'hidden'} to students`);
+            socket.emit('set-poll-visibility', {
+                meetingId,
+                pollId,
+                showResults: data.poll.showResultsToStudents
+            });
+            refreshPollResults(pollId);
+        } catch (err) {
+            console.error('Toggle visibility error:', err);
+            alert('Error updating results visibility');
+        }
+    }
+
+    async function closePollQuestion(pollId) {
+        try {
+            const res = await fetch(`${API_URL}/polls/${pollId}/close`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ showResults: true })
+            });
+
+            const data = await res.json();
+            if (!data.success) {
+                alert(data.message || 'Failed to close poll');
+                return;
+            }
+
+            if (currentPoll && currentPoll.pollId === pollId) {
+                currentPoll.isActive = false;
+                currentPoll.showResultsToStudents = data.poll.showResultsToStudents === true;
+            }
+
+            addChatMessage('System', '⏹ Poll closed');
+            socket.emit('close-poll', {
+                meetingId,
+                pollId,
+                showResults: data.poll.showResultsToStudents === true
+            });
+
+            refreshPollResults(pollId);
+        } catch (err) {
+            console.error('Poll close error:', err);
+            alert('Error closing poll');
+        }
+    }
+
+    async function exportPollResults(pollId) {
+        try {
+            const response = await fetch(`${API_URL}/polls/${pollId}/export`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!response.ok) {
+                alert('Failed to export results');
+                return;
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `poll-results-${pollId}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        } catch (err) {
+            console.error('Export error:', err);
+            alert('Error exporting results');
+        }
+    }
+
+    function togglePoll() {
+        const panel = document.getElementById('pollPanel');
+        panel.classList.toggle('hidden');
+    }
+
+    // Socket handlers for real-time poll updates
+    socket.on('poll-created', ({ pollId, title, question, options, showResultsToStudents, isActive }) => {
+        currentPollId = pollId;
+        currentPoll = {
+            pollId,
+            title,
+            question,
+            options: Array.isArray(options) ? options : [],
+            showResultsToStudents: showResultsToStudents === true,
+            isActive: isActive !== false
+        };
+        displayPoll(currentPoll, { openPanel: true });
+    });
+
+    socket.on('poll-response-received', ({ pollId }) => {
+        if (user.role === 'teacher' && currentPollId === pollId) {
+            setTimeout(() => refreshPollResults(pollId), 300);
+        }
+    });
+
+    socket.on('poll-closed', async ({ pollId, showResults }) => {
+        if (currentPoll && currentPoll.pollId === pollId) {
+            currentPoll.isActive = false;
+            currentPoll.showResultsToStudents = showResults === true;
+        }
+
+        addChatMessage('System', showResults ? '👁️ Poll closed and results are visible' : '🔒 Poll closed and results are hidden');
+
+        if (user.role === 'teacher' && currentPollId === pollId) {
+            refreshPollResults(pollId);
+            return;
+        }
+
+        if (user.role === 'student' && currentPollId === pollId) {
+            if (showResults) {
+                await refreshPollResults(pollId, true);
+            } else {
+                document.getElementById('pollContent').innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px;">Poll closed. Results are hidden by teacher.</div>';
+            }
+        }
+    });
+
+    socket.on('poll-visibility-updated', async ({ pollId, showResults }) => {
+        if (currentPoll && currentPoll.pollId === pollId) {
+            currentPoll.showResultsToStudents = showResults === true;
+        }
+
+        addChatMessage('System', showResults ? '👁️ Poll results are now visible' : '🔒 Poll results are now hidden');
+
+        if (user.role === 'teacher' && currentPollId === pollId) {
+            refreshPollResults(pollId);
+            return;
+        }
+
+        if (user.role === 'student' && currentPollId === pollId && currentPoll && currentPoll.isActive === false) {
+            if (showResults) {
+                await refreshPollResults(pollId, true);
+            } else {
+                document.getElementById('pollContent').innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px;">Results are hidden by teacher.</div>';
+            }
+        }
+    });
+
+    function cleanup() {
+        if (waitingRoomPollInterval) {
+            clearInterval(waitingRoomPollInterval);
+            waitingRoomPollInterval = null;
+        }
+
+        if (handRaised) {
+            socket.emit('student-hand', {
+                meetingId,
+                raised: false,
+                userName: user.name || user.email
+            });
+            handRaised = false;
+        }
+
+        if (isScreenSharing) {
+            stopScreenShare(true);
+        }
+        if (localStream) localStream.getTracks().forEach(t => t.stop());
+        Object.values(peerConnections).forEach(pc => pc.close());
+        socket.disconnect();
+    }
+
+    function startBehavioralTracking() {
+        setInterval(() => {
+            const elapsedSeconds = Math.floor((Date.now() - behavioralData.startTime) / 1000);
+            behavioralData.study_duration_seconds = elapsedSeconds;
+            behavioralData.study_duration = Math.floor(elapsedSeconds / 60);
+            document.getElementById('studyDuration').textContent = `${behavioralData.study_duration} min`;
+        }, 1000);
+        resetIdleTimer();
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) { behavioralData.tab_switch_count++; document.getElementById('tabSwitches').textContent = behavioralData.tab_switch_count; }
+        });
+    }
+
+    function setupActivityTracking() {
+        ['mousedown','mousemove','keypress','scroll','touchstart'].forEach(ev => document.addEventListener(ev, resetIdleTimer, true));
+    }
+
+    function resetIdleTimer() {
+        clearTimeout(idleTimer);
+        lastActivityTime = Date.now();
+        if (isIdle) { isIdle = false; behavioralData.break_count++; document.getElementById('breakCount').textContent = behavioralData.break_count; }
+        idleTimer = setTimeout(() => {
+            isIdle = true;
+            const idleSeconds = Math.floor((Date.now() - lastActivityTime) / 1000);
+            const mins = Math.floor(idleSeconds / 60);
+            behavioralData.idle_time_seconds += idleSeconds;
+            behavioralData.idle_time += mins;
+            document.getElementById('idleTime').textContent = `${behavioralData.idle_time} min`;
+        }, 120000);
+    }
+
+    async function endSessionWithAnalytics() {
+        if (isSubmittingAnalytics) return;
+        if (!confirm('End session and submit analytics?')) return;
+        isSubmittingAnalytics = true;
+        behavioralData.study_duration_seconds = Math.floor((Date.now() - behavioralData.startTime) / 1000);
+        behavioralData.study_duration = Math.floor(behavioralData.study_duration_seconds / 60);
+        behavioralData.idle_time_seconds = Math.max(behavioralData.idle_time_seconds, behavioralData.idle_time * 60);
+        try {
+            const res = await fetch(`${API_URL}/analytics/submit`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ meetingId, behavioralData })
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) { alert(data.message || 'Failed to submit analytics.'); isSubmittingAnalytics = false; return; }
+            cleanup();
+            window.location.href = 'student-dashboard.html';
+        } catch (err) {
+            alert('Could not submit analytics. Check backend/ML service.');
+            isSubmittingAnalytics = false;
+        }
+    }
+
+    document.getElementById('chatInput').addEventListener('keypress', e => { if (e.key === 'Enter') sendMessage(); });
+    window.addEventListener('beforeunload', cleanup);
+</script>
+</body>
+</html>

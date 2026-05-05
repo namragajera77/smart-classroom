@@ -1,0 +1,710 @@
+/**
+ * Meeting Routes
+ * Handles meeting creation, management, and joining
+
+/**
+ * WAITING ROOM ROUTES
+ * Manage student admission to meetings
+ */
+
+/**
+ * @route   GET /api/meetings/waiting-list/:meetingId
+ * @desc    Get list of waiting participants (Teacher only)
+ * @access  Private (Teacher)
+ */
+router.get('/waiting-list/:meetingId', authenticateToken, authorizeTeacher, async (req, res) => {
+  try {
+    const waitingParticipants = await Participant.find({
+      meetingId: req.params.meetingId,
+      status: 'waiting'
+    }).populate('userId', 'name email');
+
+    res.json({
+      success: true,
+      waitingCount: waitingParticipants.length,
+      waitingParticipants: waitingParticipants.map(p => ({
+        participantId: p._id,
+        userId: p.userId._id,
+        name: p.userName,
+        email: p.userEmail,
+        requestTime: p.joinTime,
+        status: p.status
+      }))
+    });
+  } catch (error) {
+    console.error('Get waiting list error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching waiting list'
+    });
+  }
+});
+
+/**
+ * @route   POST /api/meetings/admit/:meetingId/:participantId
+ * @desc    Admit a waiting participant to meeting (Teacher only)
+ * @access  Private (Teacher)
+ */
+router.post('/admit/:meetingId/:participantId', authenticateToken, authorizeTeacher, async (req, res) => {
+  try {
+    const participant = await Participant.findById(req.params.participantId);
+
+    if (!participant || participant.meetingId !== req.params.meetingId || participant.status !== 'waiting') {
+      return res.status(404).json({
+        success: false,
+        message: 'Participant not found in waiting room'
+      });
+    }
+ */
+    // Update participant status
+    participant.status = 'admitted';
+    participant.admittedAt = new Date();
+    participant.admittedBy = req.user.userId;
+    participant.isActive = true;
+    await participant.save();
+
+    res.json({
+      success: true,
+      message: 'Participant admitted to meeting',
+      participant
+    });
+  } catch (error) {
+    console.error('Admit participant error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while admitting participant'
+    });
+  }
+});
+
+/**
+ * @route   POST /api/meetings/admit-all/:meetingId
+ * @desc    Admit all waiting participants (Teacher only)
+ * @access  Private (Teacher)
+ */
+router.post('/admit-all/:meetingId', authenticateToken, authorizeTeacher, async (req, res) => {
+  try {
+    const result = await Participant.updateMany(
+      {
+        meetingId: req.params.meetingId,
+        status: 'waiting'
+      },
+      {
+        status: 'admitted',
+        admittedAt: new Date(),
+        admittedBy: req.user.userId,
+        isActive: true
+      }
+    );
+const express = require('express');
+    res.json({
+      success: true,
+      message: `Admitted ${result.modifiedCount} participant(s)`,
+      admittedCount: result.modifiedCount
+    });
+  } catch (error) {
+    console.error('Admit all error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while admitting participants'
+    });
+  }
+});
+
+/**
+ * @route   POST /api/meetings/reject/:meetingId/:participantId
+ * @desc    Reject a waiting participant (Teacher only)
+ * @access  Private (Teacher)
+ */
+router.post('/reject/:meetingId/:participantId', authenticateToken, authorizeTeacher, async (req, res) => {
+  try {
+    const participant = await Participant.findById(req.params.participantId);
+const router = express.Router();
+    if (!participant || participant.meetingId !== req.params.meetingId || participant.status !== 'waiting') {
+      return res.status(404).json({
+        success: false,
+        message: 'Participant not found in waiting room'
+      });
+    }
+const authenticateToken = require('../middleware/auth');
+    // Update participant status
+    participant.status = 'rejected';
+    participant.isActive = false;
+    await participant.save();
+const { authorizeTeacher, authorizeStudent, authorizeBoth } = require('../middleware/rbac');
+    res.json({
+      success: true,
+      message: 'Participant rejected',
+      participant
+    });
+  } catch (error) {
+    console.error('Reject participant error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while rejecting participant'
+    });
+  }
+});
+
+/**
+ * @route   GET /api/meetings/waiting-room-status/:meetingId
+ * @desc    Get waiting room status (Check if student is in waiting room)
+ * @access  Private (Both)
+ */
+router.get('/waiting-room-status/:meetingId', authenticateToken, authorizeBoth, async (req, res) => {
+  try {
+    const participant = await Participant.findOne({
+      meetingId: req.params.meetingId,
+      userId: req.user.userId
+    });
+const Meeting = require('../models/Meeting');
+    if (!participant) {
+      return res.json({
+        success: true,
+        status: 'not-joined',
+        inWaitingRoom: false
+      });
+    }
+const Participant = require('../models/Participant');
+    res.json({
+      success: true,
+      status: participant.status, // 'waiting', 'admitted', or 'rejected'
+      inWaitingRoom: participant.status === 'waiting',
+      isActive: participant.isActive
+    });
+  } catch (error) {
+    console.error('Get waiting room status error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+/**
+ * @route   POST /api/meetings/create
+ * @desc    Create new meeting (Teacher only)
+ * @access  Private (Teacher)
+ */
+router.post('/create', authenticateToken, authorizeTeacher, async (req, res) => {
+  try {
+    const { title, isPasswordProtected, password } = req.body;
+
+    if (!title) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Meeting title is required' 
+      });
+    }
+
+    // Generate unique meeting ID
+    const meetingId = 'MTG-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+
+    // Auto-generate password if password protection is enabled but no password provided
+    let meetingPassword = null;
+    if (isPasswordProtected) {
+      meetingPassword = password || Math.random().toString(36).substr(2, 8).toUpperCase();
+    }
+
+    const meeting = new Meeting({
+      meetingId,
+      title,
+      teacherId: req.user.userId,
+      teacherName: req.user.email,
+      password: meetingPassword,
+      isPasswordProtected: !!meetingPassword
+    });
+
+    await meeting.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'Meeting created successfully',
+      meeting: {
+        id: meeting._id,
+        meetingId: meeting.meetingId,
+        title: meeting.title,
+        status: meeting.status,
+        isPasswordProtected: meeting.isPasswordProtected,
+        password: meeting.password, // Include password in response so teacher can see it
+        createdAt: meeting.createdAt
+      }
+    });
+  } catch (error) {
+    console.error('Create meeting error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error while creating meeting' 
+    });
+  }
+});
+
+/**
+ * @route   GET /api/meetings/my-meetings
+ * @desc    Get all meetings created by teacher
+ * @access  Private (Teacher)
+ */
+router.get('/my-meetings', authenticateToken, authorizeTeacher, async (req, res) => {
+  try {
+    const meetings = await Meeting.find({ teacherId: req.user.userId })
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      meetings
+    });
+  } catch (error) {
+    console.error('Get meetings error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error while fetching meetings' 
+    });
+  }
+});
+
+/**
+ * @route   GET /api/meetings/my-participated
+ * @desc    Get all meetings student has participated in
+ * @access  Private (Student)
+ */
+router.get('/my-participated', authenticateToken, authorizeStudent, async (req, res) => {
+  try {
+    const Participant = require('../models/Participant');
+    const Analytics = require('../models/Analytics');
+    
+    // Get all meetings where student participated
+    const participations = await Participant.find({ 
+      userId: req.user.userId 
+    }).sort({ joinTime: -1 });
+
+    // Get meeting details for each participation
+    const meetings = await Promise.all(participations.map(async (p) => {
+      const meeting = await Meeting.findOne({ meetingId: p.meetingId });
+      if (!meeting) return null;
+      
+      // Check if analytics exist
+      const hasAnalytics = await Analytics.findOne({
+        studentId: req.user.userId,
+        meetingId: p.meetingId
+      });
+
+      return {
+        meetingId: meeting.meetingId,
+        title: meeting.title,
+        status: meeting.status,
+        joinedAt: p.joinTime,
+        leftAt: p.leaveTime,
+        hasAnalytics: !!hasAnalytics,
+        _id: meeting._id
+      };
+    }));
+
+    // Filter out null values
+    const validMeetings = meetings.filter(m => m !== null);
+
+    res.json({
+      success: true,
+      meetings: validMeetings
+    });
+  } catch (error) {
+    console.error('Get participated meetings error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error while fetching meetings' 
+    });
+  }
+});
+
+/**
+ * @route   POST /api/meetings/start/:meetingId
+ * @desc    Start meeting (Teacher only)
+ * @access  Private (Teacher)
+ */
+router.post('/start/:meetingId', authenticateToken, authorizeTeacher, async (req, res) => {
+  try {
+    const meeting = await Meeting.findOne({ 
+      meetingId: req.params.meetingId,
+      teacherId: req.user.userId 
+    });
+
+    if (!meeting) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Meeting not found' 
+      });
+    }
+
+    meeting.status = 'active';
+    meeting.startTime = new Date();
+    await meeting.save();
+
+    res.json({
+      success: true,
+      message: 'Meeting started successfully',
+      meeting
+    });
+  } catch (error) {
+    console.error('Start meeting error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error while starting meeting' 
+    });
+  }
+});
+
+/**
+ * @route   POST /api/meetings/end/:meetingId
+ * @desc    End meeting (Teacher only)
+ * @access  Private (Teacher)
+ */
+router.post('/end/:meetingId', authenticateToken, authorizeTeacher, async (req, res) => {
+  try {
+    const meeting = await Meeting.findOne({ 
+      meetingId: req.params.meetingId,
+      teacherId: req.user.userId 
+    });
+
+    if (!meeting) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Meeting not found' 
+      });
+    }
+
+    meeting.status = 'ended';
+    meeting.endTime = new Date();
+    await meeting.save();
+
+    // Update all active participants
+    await Participant.updateMany(
+      { meetingId: req.params.meetingId, isActive: true },
+      { isActive: false, leaveTime: new Date() }
+    );
+
+    res.json({
+      success: true,
+      message: 'Meeting ended successfully',
+      meeting
+    });
+  } catch (error) {
+    console.error('End meeting error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error while ending meeting' 
+    });
+  }
+});
+
+/**
+ * @route   POST /api/meetings/join/:meetingId
+ * @desc    Join meeting (Student)
+ * @access  Private (Both)
+ */
+router.post('/join/:meetingId', authenticateToken, authorizeBoth, async (req, res) => {
+  try {
+    const { password } = req.body;
+    const meeting = await Meeting.findOne({ meetingId: req.params.meetingId });
+
+    if (!meeting) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Meeting not found' 
+      });
+    }
+
+    if (meeting.status !== 'active') {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Meeting is not active' 
+      });
+    }
+
+    // Check password if meeting is password-protected
+    if (meeting.isPasswordProtected && meeting.password) {
+      if (!password) {
+        return res.status(403).json({
+          success: false,
+          message: 'This meeting is password protected. Please provide the password.',
+          requiresPassword: true
+        });
+      }
+
+      if (password !== meeting.password) {
+        return res.status(403).json({
+          success: false,
+          message: 'Invalid password. Please try again.',
+          requiresPassword: true
+        });
+      }
+    }
+
+    // Check if currently in the meeting (isActive: true)
+    const activeParticipant = await Participant.findOne({
+      meetingId: req.params.meetingId,
+      userId: req.user.userId,
+      isActive: true
+    });
+
+    if (activeParticipant) {
+      return res.json({
+        success: true,
+        message: 'Already in meeting',
+        meeting
+      });
+    }
+
+    // Allow rejoining - create new participant record
+    const participant = new Participant({
+      meetingId: req.params.meetingId,
+      userId: req.user.userId,
+      userName: req.user.email
+    });
+
+    await participant.save();
+
+    res.json({
+      success: true,
+      message: 'Joined meeting successfully',
+      meeting
+    });
+  } catch (error) {
+    console.error('Join meeting error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error while joining meeting' 
+    });
+  }
+});
+
+/**
+ * @route   GET /api/meetings/participants/:meetingId
+ * @desc    Get meeting participants (Teacher only)
+ * @access  Private (Teacher)
+ */
+router.get('/participants/:meetingId', authenticateToken, authorizeTeacher, async (req, res) => {
+  try {
+    const participants = await Participant.find({ 
+      meetingId: req.params.meetingId 
+    }).populate('userId', 'name email');
+
+    res.json({
+      success: true,
+      participants
+    });
+  } catch (error) {
+    console.error('Get participants error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error while fetching participants' 
+    });
+  }
+});
+
+/**
+ * @route   GET /api/meetings/attendance/:meetingId
+ * @desc    Get meeting attendance data (JSON format)
+ * @access  Private (Teacher only)
+ */
+router.get('/attendance/:meetingId', authenticateToken, authorizeTeacher, async (req, res) => {
+  try {
+    const meeting = await Meeting.findOne({
+      meetingId: req.params.meetingId,
+      teacherId: req.user.userId
+    });
+
+    if (!meeting) {
+      return res.status(404).json({
+        success: false,
+        message: 'Meeting not found or access denied'
+      });
+    }
+
+    const participants = await Participant.find({
+      meetingId: req.params.meetingId
+    });
+
+    // Calculate attendance statistics
+    const attendanceData = participants.map(p => {
+      const joinTime = new Date(p.joinTime);
+      const leaveTime = p.leaveTime ? new Date(p.leaveTime) : new Date();
+      const duration = Math.round((leaveTime - joinTime) / 60000); // in minutes
+
+      return {
+        name: p.userName,
+        joinTime: joinTime.toLocaleString('en-US', { timeZone: 'UTC' }),
+        leaveTime: p.leaveTime ? leaveTime.toLocaleString('en-US', { timeZone: 'UTC' }) : 'Still in meeting',
+        durationMinutes: duration,
+        status: p.isActive ? 'Active' : 'Left'
+      };
+    });
+
+    res.json({
+      success: true,
+      attendance: {
+        meetingTitle: meeting.title,
+        meetingId: meeting.meetingId,
+        teacherName: meeting.teacherName,
+        startTime: meeting.startTime ? new Date(meeting.startTime).toLocaleString() : 'Not started',
+        endTime: meeting.endTime ? new Date(meeting.endTime).toLocaleString() : 'Ongoing',
+        totalParticipants: participants.length,
+        participants: attendanceData
+      }
+    });
+  } catch (error) {
+    console.error('Get attendance error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching attendance'
+    });
+  }
+});
+
+/**
+ * @route   GET /api/meetings/download-attendance/:meetingId
+ * @desc    Download attendance report as PDF or CSV
+ * @access  Private (Teacher only)
+ * @query   format: 'pdf' or 'csv' (default: pdf)
+ */
+router.get('/download-attendance/:meetingId', authenticateToken, authorizeTeacher, async (req, res) => {
+  try {
+    const format = req.query.format || 'pdf';
+    
+    const meeting = await Meeting.findOne({
+      meetingId: req.params.meetingId,
+      teacherId: req.user.userId
+    });
+
+    if (!meeting) {
+      return res.status(404).json({
+        success: false,
+        message: 'Meeting not found or access denied'
+      });
+    }
+
+    const participants = await Participant.find({
+      meetingId: req.params.meetingId
+    });
+
+    if (format === 'csv') {
+      generateCSV(res, meeting, participants);
+    } else {
+      generatePDF(res, meeting, participants);
+    }
+  } catch (error) {
+    console.error('Download attendance error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while generating report'
+    });
+  }
+});
+
+// Helper function to generate CSV
+function generateCSV(res, meeting, participants) {
+  const { stringify } = require('csv-stringify/sync');
+
+  const rows = [
+    ['ATTENDANCE REPORT'],
+    ['Meeting Title', meeting.title],
+    ['Meeting ID', meeting.meetingId],
+    ['Teacher', meeting.teacherName],
+    ['Start Time', meeting.startTime ? new Date(meeting.startTime).toLocaleString() : 'Not started'],
+    ['End Time', meeting.endTime ? new Date(meeting.endTime).toLocaleString() : 'Ongoing'],
+    ['Total Participants', participants.length],
+    [],
+    ['Student Name', 'Join Time', 'Leave Time', 'Duration (Minutes)', 'Status']
+  ];
+
+  participants.forEach(p => {
+    const joinTime = new Date(p.joinTime);
+    const leaveTime = p.leaveTime ? new Date(p.leaveTime) : new Date();
+    const duration = Math.round((leaveTime - joinTime) / 60000);
+    
+    rows.push([
+      p.userName,
+      joinTime.toLocaleString(),
+      p.leaveTime ? leaveTime.toLocaleString() : 'Still in meeting',
+      duration,
+      p.isActive ? 'Active' : 'Left'
+    ]);
+  });
+
+  const csv = stringify(rows);
+  
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', `attachment; filename="attendance-${meeting.meetingId}.csv"`);
+  res.send(csv);
+}
+
+// Helper function to generate PDF
+function generatePDF(res, meeting, participants) {
+  const PDFDocument = require('pdfkit');
+  const doc = new PDFDocument();
+
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `attachment; filename="attendance-${meeting.meetingId}.pdf"`);
+  
+  doc.pipe(res);
+
+  // Title
+  doc.fontSize(20).font('Helvetica-Bold').text('ATTENDANCE REPORT', { align: 'center' });
+  doc.moveDown(0.3);
+
+  // Meeting details
+  doc.fontSize(11).font('Helvetica')
+    .text(`Meeting Title: ${meeting.title}`)
+    .text(`Meeting ID: ${meeting.meetingId}`)
+    .text(`Teacher: ${meeting.teacherName}`)
+    .text(`Start Time: ${meeting.startTime ? new Date(meeting.startTime).toLocaleString() : 'Not started'}`)
+    .text(`End Time: ${meeting.endTime ? new Date(meeting.endTime).toLocaleString() : 'Ongoing'}`)
+    .text(`Total Participants: ${participants.length}`)
+  
+  doc.moveDown(0.5);
+
+  // Table header
+  const tableTop = doc.y;
+  const col1 = 50;
+  const col2 = 200;
+  const col3 = 330;
+  const col4 = 440;
+  const rowHeight = 25;
+
+  doc.fontSize(10).font('Helvetica-Bold');
+  doc.text('Student Name', col1, tableTop);
+  doc.text('Join Time', col2, tableTop);
+  doc.text('Duration (Min)', col3, tableTop);
+  doc.text('Status', col4, tableTop);
+
+  // Separator line
+  doc.moveTo(50, tableTop + 15).lineTo(550, tableTop + 15).stroke();
+
+  // Table rows
+  let yPosition = tableTop + 25;
+  doc.fontSize(9).font('Helvetica');
+
+  participants.forEach(p => {
+    const joinTime = new Date(p.joinTime);
+    const leaveTime = p.leaveTime ? new Date(p.leaveTime) : new Date();
+    const duration = Math.round((leaveTime - joinTime) / 60000);
+
+    doc.text(p.userName, col1, yPosition);
+    doc.text(joinTime.toLocaleString(), col2, yPosition);
+    doc.text(duration.toString(), col3, yPosition);
+    doc.text(p.isActive ? 'Active' : 'Left', col4, yPosition);
+
+    yPosition += rowHeight;
+    
+    // Add new page if needed
+    if (yPosition > 750) {
+      doc.addPage();
+      yPosition = 50;
+    }
+  });
+
+  doc.moveDown();
+  doc.fontSize(9).font('Helvetica').text(`Generated on: ${new Date().toLocaleString()}`, { align: 'center' });
+
+  doc.end();
+}
+
+module.exports = router;

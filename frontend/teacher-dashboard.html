@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard – Smart Classroom</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="theme.css">
+    <style>
+        body { background-color: #0A0B1A; }
+
+        /* ── LAYOUT ── */
+        .app-shell { display: flex; min-height: 100vh; }
+
+        /* ── SIDEBAR ── */
+        .sidebar {
+            width: 240px;
+            background: rgba(13,15,34,0.97);
+            border-right: 1px solid rgba(255,255,255,0.07);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0; left: 0; bottom: 0;
+            z-index: 50;
+            transition: transform 0.3s ease;
+        }
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 22px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+        }
+        .sidebar-logo-icon {
+            width: 38px; height: 38px;
+            background: linear-gradient(135deg, #6C63FF, #4F46E5);
+            border-radius: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            box-shadow: 0 4px 12px rgba(108,99,255,0.4);
+        }
+        .sidebar-brand-name {
+            font-family: 'Poppins', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            background: linear-gradient(135deg,#fff,#A78BFA);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .sidebar-nav {
+            flex: 1;
+            padding: 16px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            color: var(--muted);
+            font-size: 14px;
+            font-weight: 500;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        .nav-item .nav-icon { font-size: 18px; }
+        .nav-item:hover, .nav-item.active {
+            background: rgba(108,99,255,0.12);
+            color: #fff;
+            border-color: rgba(108,99,255,0.2);
+        }
+        .nav-item.active {
+            background: rgba(108,99,255,0.18);
+            color: #A78BFA;
+        }
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid rgba(255,255,255,0.07);
+        }
+        .user-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .user-avatar {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            background: linear-gradient(135deg,#6C63FF,#A78BFA);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 700;
+            color: white;
+            font-family: 'Poppins', sans-serif;
+        }
+        .user-info-mini { flex: 1; min-width: 0; }
+        .user-name-mini {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--ink);
+            font-family: 'Inter', sans-serif;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .user-role-mini {
+            font-size: 11px;
+            color: #A78BFA;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+        }
+        .btn-icon {
+            width: 32px; height: 32px;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 8px;
+            color: var(--muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .btn-icon:hover { background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.25); color: #FCA5A5; }
+
+        /* ── MAIN CONTENT ── */
+        .main-content {
+            flex: 1;
+            margin-left: 240px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── TOP BAR ── */
+        .topbar {
+            height: 68px;
+            background: rgba(10,11,26,0.80);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 28px;
+            position: sticky;
+            top: 0;
+            z-index: 40;
+        }
+        .topbar-title {
+            font-size: 18px;
+            font-weight: 700;
+            font-family: 'Poppins', sans-serif;
+            color: var(--ink);
+        }
+        .topbar-right { display: flex; align-items: center; gap: 12px; }
+        .notif-btn {
+            width: 40px; height: 40px;
+            border-radius: 11px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.08);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .notif-btn:hover { background: rgba(108,99,255,0.12); border-color: rgba(108,99,255,0.25); }
+        .notif-dot {
+            position: absolute;
+            top: 6px; right: 6px;
+            width: 8px; height: 8px;
+            background: #ef4444;
+            border-radius: 50%;
+            border: 2px solid var(--bg);
+        }
+
+        /* ── PAGE CONTENT ── */
+        .page { padding: 28px; }
+
+        /* Greeting */
+        .greeting-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .greeting-text h1 {
+            font-size: 28px;
+            color: #fff;
+            margin-bottom: 4px;
+            font-weight: 700;
+        }
+        .greeting-text p { color: var(--muted); font-size: 14px; }
+        .greeting-text h1 span { background: var(--brand-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+        /* Quick Stats Row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-mini {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: all 0.3s;
+        }
+        .stat-mini:hover { background: rgba(108,99,255,0.08); border-color: rgba(108,99,255,0.2); transform: translateY(-2px); }
+        .stat-mini-icon {
+            width: 44px; height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        .stat-mini-icon.purple { background: rgba(108,99,255,0.15); border: 1px solid rgba(108,99,255,0.2); }
+        .stat-mini-icon.cyan   { background: rgba(6,182,212,0.12); border: 1px solid rgba(6,182,212,0.2); }
+        .stat-mini-icon.green  { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.2); }
+        .stat-mini-val { font-size: 24px; font-weight: 800; font-family: 'Poppins', sans-serif; color: #fff; }
+        .stat-mini-lbl { font-size: 12px; color: var(--muted); font-family: 'Inter', sans-serif; }
+
+        /* Create meeting */
+        .create-box {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        #scheduledFor {
+            color-scheme: dark;
+            cursor: pointer;
+        }
+        #scheduledFor::-webkit-calendar-picker-indicator {
+            filter: invert(1) brightness(1.25);
+            opacity: 1;
+            cursor: pointer;
+        }
+        @media (max-width: 600px) { .create-box { grid-template-columns: 1fr; } }
+
+        /* Meeting Cards */
+        .meeting-grid { display: grid; gap: 14px; }
+        .meeting-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            animation: fadeUpIn 0.5s both;
+        }
+        .meeting-info { flex: 1; min-width: 0; }
+        .meeting-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 8px;
+            font-family: 'Poppins', sans-serif;
+        }
+        .meeting-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .meeting-time { font-size: 12px; color: var(--muted); margin-top: 4px; }
+        .meeting-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .meeting-actions .btn { padding: 9px 16px !important; font-size: 12px !important; border-radius: 10px !important; }
+
+        .calendar-wrap {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 16px;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 6px;
+        }
+        .cal-head {
+            text-align: center;
+            font-size: 11px;
+            color: var(--muted);
+            font-weight: 700;
+            padding: 8px 0;
+        }
+        .cal-cell {
+            min-height: 74px;
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 10px;
+            padding: 6px;
+            font-size: 11px;
+            color: #dbe4ff;
+            background: rgba(255,255,255,0.02);
+        }
+        .cal-cell.empty {
+            opacity: 0.35;
+        }
+        .cal-day {
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .cal-meeting {
+            background: rgba(6,182,212,0.18);
+            border: 1px solid rgba(6,182,212,0.3);
+            border-radius: 6px;
+            padding: 2px 6px;
+            margin-top: 4px;
+            color: #a5f3fc;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        @media (max-width: 860px) {
+            .sidebar { transform: translateX(-100%); }
+            .main-content { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+<div class="app-shell">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="sidebar-logo-icon">🎓</div>
+            <div class="sidebar-brand-name">Smart Classroom</div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-item active" onclick="navTo('dashboard', this)">
+                <span class="nav-icon">🏠</span>
+                <span>Dashboard</span>
+            </div>
+            <div class="nav-item" onclick="navTo('meetings', this)">
+                <span class="nav-icon">📹</span>
+                <span>My Meetings</span>
+            </div>
+            <div class="nav-item" onclick="navTo('calendar', this)">
+                <span class="nav-icon">📅</span>
+                <span>Calendar</span>
+            </div>
+            <div class="nav-item" onclick="navTo('analytics', this)">
+                <span class="nav-icon">📊</span>
+                <span>Analytics</span>
+            </div>
+            <div class="nav-item" onclick="navTo('meetings', this)">
+                <span class="nav-icon">👥</span>
+                <span>Students</span>
+            </div>
+            <div class="nav-item" onclick="logout()">
+                <span class="nav-icon">🚪</span>
+                <span>Logout</span>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-card">
+                <div class="user-avatar" id="sidebarAvatar">T</div>
+                <div class="user-info-mini">
+                    <div class="user-name-mini" id="sidebarName">Loading...</div>
+                    <div class="user-role-mini">Teacher</div>
+                </div>
+                <button class="btn-icon" title="Logout" onclick="logout()">🚪</button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div class="topbar">
+            <div class="topbar-title">Teacher Dashboard</div>
+            <div class="topbar-right">
+                <div class="notif-btn">🔔<div class="notif-dot"></div></div>
+                <div class="role-badge">Teacher</div>
+                <button class="btn btn-outline" onclick="logout()" style="padding:8px 16px!important;font-size:13px!important;">Logout</button>
+            </div>
+        </div>
+
+        <!-- Page -->
+        <div class="page">
+            <!-- Greeting -->
+            <div class="greeting-section">
+                <div class="greeting-text">
+                    <h1>Welcome back, <span id="userName">Teacher</span> 👋</h1>
+                    <p>Create, run, and review your classes from one clean workspace.</p>
+                </div>
+                <button class="btn" onclick="document.getElementById('meetingTitle').focus()">+ New Meeting</button>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="stats-row" id="quickStats">
+                <div class="stat-mini">
+                    <div class="stat-mini-icon purple">📹</div>
+                    <div>
+                        <div class="stat-mini-val" id="totalMeetings">—</div>
+                        <div class="stat-mini-lbl">Total Meetings</div>
+                    </div>
+                </div>
+                <div class="stat-mini">
+                    <div class="stat-mini-icon green">✅</div>
+                    <div>
+                        <div class="stat-mini-val" id="activeMeetings">—</div>
+                        <div class="stat-mini-lbl">Active Now</div>
+                    </div>
+                </div>
+                <div class="stat-mini">
+                    <div class="stat-mini-icon cyan">📊</div>
+                    <div>
+                        <div class="stat-mini-val" id="completedMeetings">—</div>
+                        <div class="stat-mini-lbl">Completed</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Create Meeting -->
+            <div class="section" id="section-create">
+                <h3>🎯 Create New Meeting</h3>
+                <div class="create-box">
+                    <input type="text" id="meetingTitle" placeholder="Enter meeting title (e.g. Data Structures Lecture)">
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <label style="font-size:12px;color:var(--muted);min-width:96px;">Meeting Type</label>
+                        <select id="meetingType" onchange="toggleMeetingTypeOptions()" style="flex:1;padding:10px;border-radius:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);color:#fff;">
+                            <option value="immediate">Immediate Meeting</option>
+                            <option value="scheduled">Date-Based Meeting</option>
+                        </select>
+                    </div>
+                    <div id="scheduledOptionsContainer" style="display:none;">
+                    <input type="datetime-local" id="scheduledFor" title="Schedule date and time">
+                    <div style="display:flex;gap:10px;align-items:center;margin-top:2px;">
+                        <input type="checkbox" id="reminderEnabled" style="cursor:pointer;" checked>
+                        <label for="reminderEnabled" style="cursor:pointer;color:var(--muted);font-size:14px;">Enable reminders</label>
+                        <input type="number" id="reminderMinutesBefore" min="5" max="1440" value="30" style="width:100px;padding:8px;border-radius:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);color:#fff;">
+                        <span style="font-size:12px;color:var(--muted);">minutes before</span>
+                    </div>
+                    </div>
+                    <div style="display:flex;gap:10px;align-items:center;margin-top:12px;">
+                        <input type="checkbox" id="passwordProtectCheckbox" onchange="togglePasswordField()" style="cursor:pointer;">
+                        <label for="passwordProtectCheckbox" style="cursor:pointer;color:var(--muted);font-size:14px;">🔒 Password protect this meeting</label>
+                    </div>
+                    <div id="passwordFieldContainer" style="display:none;margin-top:12px;">
+                        <input type="text" id="meetingPassword" placeholder="Enter password (if blank, will be auto-generated)" style="padding:10px 14px;width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#fff;font-family:Inter,sans-serif;">
+                        <p style="color:var(--muted);font-size:12px;margin-top:8px;">💡 Leave blank to auto-generate a random password</p>
+                    </div>
+                    <button class="btn" onclick="createMeeting()" style="margin-top:12px;">Create Meeting</button>
+                </div>
+                <p class="hint">💡 Once active, share the Meeting ID with students and use Join Room to enter the live class.</p>
+            </div>
+
+            <div class="section" id="section-calendar">
+                <h3>📅 Upcoming Schedule</h3>
+                <div class="calendar-wrap">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                        <strong id="calendarMonthLabel" style="font-family:'Poppins',sans-serif;color:#fff;">Calendar</strong>
+                        <button class="btn btn-outline" style="padding:8px 14px!important;font-size:12px!important;" onclick="loadUpcomingMeetings()">Refresh</button>
+                    </div>
+                    <div id="teacherCalendar" class="calendar-grid"></div>
+                </div>
+                <div id="upcomingTeacherMeetings" style="margin-top:12px;"></div>
+            </div>
+
+            <!-- Meeting List -->
+            <div class="section" id="section-meetings">
+                <h3>📋 My Meetings</h3>
+                <div id="meetingList" class="meeting-grid">
+                    <div class="empty-state"><p>Loading meetings...</p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_URL = 'http://localhost:5000/api';
+    let token = localStorage.getItem('token');
+    let user = JSON.parse(localStorage.getItem('user'));
+
+    function checkAuth() {
+        const expiry = localStorage.getItem('tokenExpiry');
+        if (!token || !user || user.role !== 'teacher') { window.location.href = 'login.html'; return false; }
+        if (expiry && Date.now() > parseInt(expiry)) {
+            alert('Session expired. Please login again.');
+            ['token','user','tokenExpiry'].forEach(k => localStorage.removeItem(k));
+            window.location.href = 'login.html'; return false;
+        }
+        return true;
+    }
+    if (!checkAuth()) {}
+
+    const displayName = user.name || user.email;
+    document.getElementById('userName').textContent = displayName.split(' ')[0];
+    document.getElementById('sidebarName').textContent = displayName;
+    document.getElementById('sidebarAvatar').textContent = displayName[0].toUpperCase();
+
+    function toDateTimeLocalValue(date) {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        const h = String(date.getHours()).padStart(2, '0');
+        const min = String(date.getMinutes()).padStart(2, '0');
+        return `${y}-${m}-${d}T${h}:${min}`;
+    }
+
+    function enforceScheduledForMinNow() {
+        const input = document.getElementById('scheduledFor');
+        if (!input) return;
+
+        const now = new Date();
+        now.setSeconds(0, 0);
+        input.min = toDateTimeLocalValue(now);
+    }
+
+    function isPastScheduledDateTime(value) {
+        if (!value) return false;
+        const selected = new Date(value);
+        if (Number.isNaN(selected.getTime())) return false;
+        const nowMin = new Date();
+        nowMin.setSeconds(0, 0);
+        return selected.getTime() < nowMin.getTime();
+    }
+
+    function toggleMeetingTypeOptions() {
+        const meetingType = document.getElementById('meetingType')?.value || 'immediate';
+        const container = document.getElementById('scheduledOptionsContainer');
+        if (!container) return;
+
+        if (meetingType === 'scheduled') {
+            container.style.display = 'block';
+            enforceScheduledForMinNow();
+        } else {
+            container.style.display = 'none';
+        }
+    }
+
+    const scheduledForInput = document.getElementById('scheduledFor');
+    if (scheduledForInput) {
+        // Picker-only mode: prevent manual text edits.
+        scheduledForInput.addEventListener('keydown', (event) => {
+            if (event.key !== 'Tab') {
+                event.preventDefault();
+            }
+        });
+        scheduledForInput.addEventListener('paste', (event) => event.preventDefault());
+        scheduledForInput.addEventListener('drop', (event) => event.preventDefault());
+
+        scheduledForInput.addEventListener('focus', enforceScheduledForMinNow);
+        scheduledForInput.addEventListener('click', () => {
+            enforceScheduledForMinNow();
+            if (typeof scheduledForInput.showPicker === 'function') {
+                scheduledForInput.showPicker();
+            }
+        });
+        scheduledForInput.addEventListener('change', () => {
+            enforceScheduledForMinNow();
+            if (isPastScheduledDateTime(scheduledForInput.value)) {
+                scheduledForInput.value = '';
+                showToast('Past date/time is not allowed. Select current or future date/time.');
+            }
+        });
+    }
+
+    setInterval(enforceScheduledForMinNow, 30000);
+
+    enforceScheduledForMinNow();
+    toggleMeetingTypeOptions();
+    loadMeetings();
+    loadUpcomingMeetings();
+
+    async function createMeeting() {
+        const title = document.getElementById('meetingTitle').value.trim();
+        if (!title) { document.getElementById('meetingTitle').focus(); return; }
+        
+        const isPasswordProtected = document.getElementById('passwordProtectCheckbox').checked;
+        const password = document.getElementById('meetingPassword').value.trim();
+        const meetingType = document.getElementById('meetingType').value;
+        const isDateBasedMeeting = meetingType === 'scheduled';
+        const scheduledFor = document.getElementById('scheduledFor').value;
+        const reminderEnabled = document.getElementById('reminderEnabled').checked;
+        const reminderMinutesBefore = parseInt(document.getElementById('reminderMinutesBefore').value || '30', 10);
+
+        if (isDateBasedMeeting && !scheduledFor) {
+            alert('Please choose date/time for scheduled meeting.');
+            document.getElementById('scheduledFor').focus();
+            return;
+        }
+        
+        if (scheduledFor) {
+            if (isPastScheduledDateTime(scheduledFor)) {
+                alert('Please select current or future date/time only.');
+                enforceScheduledForMinNow();
+                return;
+            }
+        }
+
+        try {
+            const res = await fetch(`${API_URL}/meetings/create`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ 
+                    title,
+                    startNow: !isDateBasedMeeting,
+                    scheduledFor: isDateBasedMeeting ? (scheduledFor || null) : null,
+                    recurrenceType: 'none',
+                    recurrenceCount: 1,
+                    reminderEnabled: isDateBasedMeeting ? reminderEnabled : false,
+                    reminderMinutesBefore: isDateBasedMeeting ? reminderMinutesBefore : 30,
+                    isPasswordProtected,
+                    password: isPasswordProtected ? password : undefined
+                })
+            });
+            const data = await res.json();
+            if (data.success) { 
+                document.getElementById('meetingTitle').value = ''; 
+                document.getElementById('passwordProtectCheckbox').checked = false;
+                document.getElementById('meetingPassword').value = '';
+                document.getElementById('meetingType').value = 'immediate';
+                document.getElementById('scheduledFor').value = '';
+                document.getElementById('reminderEnabled').checked = true;
+                document.getElementById('reminderMinutesBefore').value = '30';
+                document.getElementById('passwordFieldContainer').style.display = 'none';
+                toggleMeetingTypeOptions();
+                
+                // Show a toast with the meeting password if created
+                if (data.meeting && data.meeting.password) {
+                    showToast(`✅ Meeting created! Password: ${data.meeting.password}`);
+                } else {
+                    showToast('✅ Meeting created successfully!');
+                }
+                
+                loadMeetings(); 
+                loadUpcomingMeetings();
+
+                if (!isDateBasedMeeting && data.meeting && data.meeting.meetingId) {
+                    joinMeeting(data.meeting.meetingId);
+                }
+            }
+            else alert(data.message || 'Failed to create meeting');
+        } catch (err) { alert('Server error. Please try again.'); }
+    }
+
+    async function loadUpcomingMeetings() {
+        try {
+            const res = await fetch(`${API_URL}/meetings/upcoming`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (!data.success) {
+                return;
+            }
+
+            renderTeacherCalendar(data.meetings || []);
+            renderUpcomingTeacherMeetings(data.meetings || []);
+        } catch (error) {
+            console.error('Load upcoming meetings error:', error);
+        }
+    }
+
+    function renderTeacherCalendar(meetings) {
+        const container = document.getElementById('teacherCalendar');
+        const monthLabel = document.getElementById('calendarMonthLabel');
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        const firstDay = new Date(year, month, 1);
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const startWeekday = firstDay.getDay();
+
+        monthLabel.textContent = firstDay.toLocaleString([], { month: 'long', year: 'numeric' });
+
+        const byDay = {};
+        meetings.forEach((m) => {
+            const baseDate = m.scheduledFor || m.actualStartTime || m.startTime || m.createdAt;
+            if (!baseDate) return;
+            const d = new Date(baseDate);
+            if (d.getFullYear() !== year || d.getMonth() !== month) return;
+            const day = d.getDate();
+            if (!byDay[day]) byDay[day] = [];
+            byDay[day].push(m);
+        });
+
+        const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        let html = weekdays.map((w) => `<div class="cal-head">${w}</div>`).join('');
+
+        for (let i = 0; i < startWeekday; i++) {
+            html += '<div class="cal-cell empty"></div>';
+        }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const items = byDay[day] || [];
+            html += `<div class="cal-cell"><div class="cal-day">${day}</div>${items.slice(0, 2).map((m) => `<div class="cal-meeting">${m.title}</div>`).join('')}${items.length > 2 ? `<div class="cal-meeting">+${items.length - 2} more</div>` : ''}</div>`;
+        }
+
+        container.innerHTML = html;
+    }
+
+    function renderUpcomingTeacherMeetings(meetings) {
+        const container = document.getElementById('upcomingTeacherMeetings');
+        const sorted = [...meetings]
+            .filter((m) => m.status !== 'ended')
+            .sort((a, b) => new Date(a.scheduledFor || a.createdAt) - new Date(b.scheduledFor || b.createdAt))
+            .slice(0, 8);
+
+        if (!sorted.length) {
+            container.innerHTML = '<div class="empty-state"><p>No upcoming meetings found.</p></div>';
+            return;
+        }
+
+        container.innerHTML = sorted.map((m) => {
+            const dateText = m.scheduledFor ? new Date(m.scheduledFor).toLocaleString() : 'No fixed schedule';
+            return `<article class="meeting-card feature-card" style="margin-top:10px;"><div class="meeting-info"><div class="meeting-title">${m.title}</div><div class="meeting-meta"><span class="status-badge status-${m.status}">${m.status.toUpperCase()}</span><span class="meeting-date">${dateText}</span></div></div><div class="meeting-actions">${m.status === 'scheduled' ? `<button class="btn btn-success" onclick="startMeeting('${m.meetingId}')">Start</button><button class="btn btn-danger" onclick="cancelScheduledMeeting('${m._id}')">Cancel</button>` : ''}${m.status === 'active' ? `<button class="btn" onclick="joinMeeting('${m.meetingId}')">Join</button>` : ''}</div></article>`;
+        }).join('');
+    }
+
+    function togglePasswordField() {
+        const checkbox = document.getElementById('passwordProtectCheckbox');
+        const container = document.getElementById('passwordFieldContainer');
+        container.style.display = checkbox.checked ? 'block' : 'none';
+        if (checkbox.checked) {
+            document.getElementById('meetingPassword').focus();
+        }
+    }
+
+    async function loadMeetings() {
+        try {
+            const res = await fetch(`${API_URL}/meetings/my-meetings`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const data = await res.json();
+            if (data.success) displayMeetings(data.meetings);
+            else document.getElementById('meetingList').innerHTML = '<div class="empty-state"><p>Failed to load meetings</p></div>';
+        } catch (err) {
+            document.getElementById('meetingList').innerHTML = '<div class="empty-state"><p>Server error</p></div>';
+        }
+    }
+
+    function displayMeetings(meetings) {
+        const el = document.getElementById('meetingList');
+        // Update stats
+        document.getElementById('totalMeetings').textContent = meetings.length;
+        document.getElementById('activeMeetings').textContent = meetings.filter(m=>m.status==='active').length;
+        document.getElementById('completedMeetings').textContent = meetings.filter(m=>m.status==='ended').length;
+
+        if (!meetings.length) { el.innerHTML = '<div class="empty-state"><p>📭 No meetings yet. Create your first one above!</p></div>'; return; }
+        el.innerHTML = meetings.map((m,i) => `
+            <article class="meeting-card feature-card" style="animation-delay:${i*0.07}s">
+                <div class="meeting-info">
+                    <div class="meeting-title">${m.title}</div>
+                    <div class="meeting-meta">
+                        <span class="meeting-id">ID: ${m.meetingId}</span>
+                        <span class="status-badge status-${m.status}">${m.status==='active'?'🟢 ':''}${m.status.toUpperCase()}</span>
+                        ${m.isPasswordProtected ? `<span class="meeting-badge" style="background:rgba(249,115,22,0.2);color:#fb923c;padding:4px 10px;border-radius:6px;font-size:12px;">🔒 Protected</span>` : ''}
+                    </div>
+                    ${m.isPasswordProtected && m.password ? `<div class="meeting-password" style="margin-top:8px;padding:8px 10px;background:rgba(99,102,241,0.1);border-radius:6px;border:1px solid rgba(99,102,241,0.2);display:flex;align-items:center;justify-content:space-between;">
+                        <span style="font-size:12px;color:var(--muted);">Password: <code style="background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px;margin-left:4px;">${m.password}</code></span>
+                        <button onclick="copyToClipboard('${m.password}')" style="background:rgba(99,102,241,0.2);border:1px solid rgba(99,102,241,0.3);color:#a78bfa;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:11px;">📋 Copy</button>
+                    </div>` : ''}
+                    ${m.scheduledFor ? `<div class="meeting-time">Scheduled: ${new Date(m.scheduledFor).toLocaleString()}</div>` : ''}
+                    ${m.actualStartTime ? `<div class="meeting-time">Started: ${new Date(m.actualStartTime).toLocaleString()}</div>` : (m.startTime && !isNaN(new Date(m.startTime).getTime()) ? `<div class="meeting-time">Started: ${new Date(m.startTime).toLocaleString()}</div>` : '')}
+                </div>
+                <div class="meeting-actions">
+                    ${m.status === 'scheduled' ? `<button class="btn btn-success" onclick="startMeeting('${m.meetingId}')">▶ Start</button><button class="btn btn-danger" onclick="cancelScheduledMeeting('${m._id}')">🗑 Cancel</button>` : ''}
+                    ${m.status === 'active' ? `
+                        <button class="btn" onclick="joinMeeting('${m.meetingId}')">🔗 Join Room</button>
+                        <button class="btn btn-danger" onclick="endMeeting('${m.meetingId}')">⏹ End</button>` : ''}
+                    ${m.status === 'ended' ? `
+                        <button class="btn btn-secondary" onclick="viewAnalytics('${m.meetingId}')">📊 Analytics</button>
+                        <button class="btn btn-secondary" onclick="downloadAttendance('${m.meetingId}', 'pdf')">📄 PDF Report</button>
+                        <button class="btn btn-secondary" onclick="downloadAttendance('${m.meetingId}', 'csv')">📊 CSV Export</button>` : ''}
+                </div>
+            </article>
+        `).join('');
+    }
+
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            showToast('✅ Password copied to clipboard!');
+        }).catch(err => {
+            console.error('Failed to copy:', err);
+        });
+    }
+
+    async function startMeeting(id) {
+        try {
+            const res = await fetch(`${API_URL}/meetings/start/${id}`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } });
+            const data = await res.json();
+            if (data.success) { loadMeetings(); joinMeeting(id); }
+            else alert(data.message || 'Failed to start');
+        } catch (err) { alert('Server error.'); }
+    }
+    async function endMeeting(id) {
+        if (!confirm('End this meeting?')) return;
+        try {
+            const res = await fetch(`${API_URL}/meetings/end/${id}`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } });
+            const data = await res.json();
+            if (data.success) {
+                loadMeetings();
+                loadUpcomingMeetings();
+            }
+            else alert(data.message || 'Failed to end');
+        } catch (err) { alert('Server error.'); }
+    }
+
+    async function cancelScheduledMeeting(meetingDocId) {
+        if (!meetingDocId) {
+            alert('Unable to cancel this meeting (missing id).');
+            return;
+        }
+
+        if (!confirm('Cancel this scheduled meeting?')) return;
+
+        try {
+            const res = await fetch(`${API_URL}/meetings/meeting/${meetingDocId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (data.success) {
+                showToast('✅ Scheduled meeting cancelled');
+                loadMeetings();
+                loadUpcomingMeetings();
+            } else {
+                alert(data.message || 'Failed to cancel meeting');
+            }
+        } catch (err) {
+            alert('Server error while cancelling meeting.');
+        }
+    }
+    
+    async function downloadAttendance(meetingId, format) {
+        try {
+            const url = `${API_URL}/meetings/download-attendance/${meetingId}?format=${format}`;
+            const response = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+            
+            if (!response.ok) {
+                const data = await response.json();
+                alert(data.message || 'Failed to download report');
+                return;
+            }
+
+            // Get the filename from response header
+            const contentDisposition = response.headers.get('content-disposition');
+            let filename = format === 'pdf' ? 'attendance.pdf' : 'attendance.csv';
+            if (contentDisposition) {
+                const match = contentDisposition.match(/filename="(.+?)"/);
+                if (match) filename = match[1];
+            }
+
+            // Create blob and download
+            const blob = await response.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(downloadUrl);
+            document.body.removeChild(a);
+            
+            showToast(`✅ ${format.toUpperCase()} report downloaded successfully`);
+        } catch (err) {
+            console.error('Download error:', err);
+            alert('Error downloading report. Please try again.');
+        }
+    }
+    
+    function joinMeeting(id) { window.location.href = `meeting-room.html?meetingId=${id}`; }
+    function viewAnalytics(id) { window.location.href = `teacher-analytics.html?meetingId=${id}`; }
+    function logout() {
+        ['token','user','tokenExpiry'].forEach(k => localStorage.removeItem(k));
+        window.location.href = 'login.html';
+    }
+
+    // Sidebar navigation
+    function navTo(target, navEl) {
+        // Update active state
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        if (navEl) {
+            navEl.classList.add('active');
+        }
+
+        if (target === 'dashboard') {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else if (target === 'meetings') {
+            const el = document.getElementById('section-meetings');
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else if (target === 'calendar') {
+            const el = document.getElementById('section-calendar');
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else if (target === 'analytics') {
+            // Go to analytics for most recent ended meeting
+            const allCards = document.querySelectorAll('[onclick^="viewAnalytics"]');
+            if (allCards.length > 0) {
+                allCards[0].click();
+            } else {
+                showToast('No completed meetings to view analytics for.');
+            }
+        }
+    }
+
+    function showToast(msg) {
+        const t = document.createElement('div');
+        t.textContent = msg;
+        t.style.cssText = 'position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:rgba(22,26,64,0.95);border:1px solid rgba(108,99,255,0.3);color:#EEF0FF;padding:12px 24px;border-radius:12px;font-size:14px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.4);font-family:Inter,sans-serif;';
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 3000);
+    }
+</script>
+</body>
+</html>

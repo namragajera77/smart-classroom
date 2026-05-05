@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class Analytics – Smart Classroom</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="theme.css">
+    <style>
+        body { background-color: #0A0B1A; }
+
+        /* ── NAVBAR ── */
+        .navbar {
+            height: 68px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 28px;
+        }
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(135deg,#fff,#A78BFA);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .nav-logo { width: 32px; height: 32px; background: linear-gradient(135deg,#6C63FF,#4F46E5); border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+
+        /* ── LAYOUT ── */
+        .container { max-width: 1180px; margin: 0 auto; padding: 0 24px 60px; }
+
+        /* ── PAGE HEADER ── */
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+            gap: 14px;
+        }
+        .page-header h1 { font-size: 28px; color: #fff; font-weight: 800; }
+        .page-header h1 span { background: var(--brand-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+        /* ── SUMMARY CARDS ── */
+        .class-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 16px;
+            margin-bottom: 6px;
+        }
+        .summary-card {
+            text-align: center;
+            border-radius: 20px !important;
+        }
+        .summary-card h3 {
+            font-size: 12px !important;
+            color: var(--muted) !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.08em !important;
+            margin-bottom: 10px !important;
+            background: none !important;
+            -webkit-text-fill-color: var(--muted) !important;
+            font-family: 'Inter', sans-serif !important;
+        }
+        .summary-value {
+            font-size: 40px;
+            font-weight: 900;
+            font-family: 'Poppins', sans-serif;
+            background: var(--brand-grad);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* ── TABLE SECTION ── */
+        .table-wrap {
+            overflow-x: auto;
+            border-radius: 14px;
+        }
+
+        /* ── HEATMAP ── */
+        .class-heatmap { overflow-x: auto; }
+        .student-heatmap-row { margin-bottom: 18px; }
+        .student-name { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 6px; font-family: 'Poppins', sans-serif; }
+        .heatmap-bars { display: flex; gap: 3px; min-width: 600px; }
+        .heatmap-bar { flex: 1; height: 32px; border-radius: 6px; cursor: pointer; transition: transform 0.15s, filter 0.15s; }
+        .heatmap-bar:hover { transform: translateY(-3px); filter: brightness(1.3); }
+
+        /* ── LEGEND ── */
+        .legend { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; }
+        .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); font-family: 'Inter', sans-serif; }
+        .legend-color { width: 14px; height: 14px; border-radius: 4px; }
+
+        /* ── SECTION HEADINGS ── */
+        .section-h { font-size: 18px !important; margin-bottom: 20px !important; }
+        .section-sub-text { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
+
+        @media (max-width: 700px) { .page-header { flex-direction: column; } }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <div class="nav-logo">🎓</div>
+            Smart Classroom
+        </div>
+        <a href="teacher-dashboard.html" class="btn btn-outline" style="text-decoration:none;padding:10px 20px!important;">← Back to Dashboard</a>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <h1>Class <span>Analytics</span> Dashboard</h1>
+        </div>
+
+        <div id="loadingState" class="loading"></div>
+
+        <div id="analyticsContent" style="display:none;">
+            <!-- Summary Cards -->
+            <div class="section" style="padding:24px!important;">
+                <h2 class="section-h">📊 Class Summary</h2>
+                <div class="class-summary">
+                    <article class="summary-card feature-card">
+                        <div class="icon">👥</div>
+                        <h3>Total Students</h3>
+                        <div class="summary-value" id="totalStudents">0</div>
+                    </article>
+                    <article class="summary-card feature-card">
+                        <div class="icon">⚡</div>
+                        <h3>Average Engagement</h3>
+                        <div class="summary-value" id="avgEngagement">0%</div>
+                    </article>
+                    <article class="summary-card feature-card">
+                        <div class="icon">⚠️</div>
+                        <h3>Focus Drop Alerts</h3>
+                        <div class="summary-value" id="focusDrops">0</div>
+                    </article>
+                </div>
+                <div class="alert-box" style="margin-top:16px;">
+                    <h4>🏆 Class Performance</h4>
+                    <p id="classSummary" style="color:var(--muted);font-size:14px;">Analyzing...</p>
+                </div>
+            </div>
+
+            <!-- Student Table -->
+            <div class="section">
+                <h2 class="section-h">👨‍🎓 Individual Student Performance</h2>
+                <div class="table-wrap">
+                    <table class="student-table">
+                        <thead>
+                            <tr>
+                                <th>Student Name</th>
+                                <th>Attention Status</th>
+                                <th>Engagement Score</th>
+                                <th>Study Duration</th>
+                                <th>Tab Switches</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentTableBody">
+                            <tr><td colspan="5" style="text-align:center;padding:24px;color:var(--muted);">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Heatmap -->
+            <div class="section">
+                <h2 class="section-h">🔥 Class Focus Heatmap Timeline</h2>
+                <p class="section-sub-text">Color-coded focus levels for each student across the session.</p>
+                <div class="class-heatmap" id="classHeatmap"></div>
+                <div class="legend">
+                    <div class="legend-item"><div class="legend-color" style="background:#ef4444;"></div><span>Low Focus (0–40)</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background:#f59e0b;"></div><span>Moderate (40–70)</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background:#10b981;"></div><span>High Focus (70–100)</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user'));
+        const tokenExpiry = localStorage.getItem('tokenExpiry');
+        const meetingId = new URLSearchParams(window.location.search).get('meetingId');
+
+        if (!token || !user || user.role !== 'teacher' || !meetingId) window.location.href = 'login.html';
+        if (tokenExpiry && Date.now() > parseInt(tokenExpiry)) {
+            ['token','user','tokenExpiry'].forEach(k => localStorage.removeItem(k));
+            window.location.href = 'login.html';
+        }
+
+        loadClassAnalytics();
+
+        async function loadClassAnalytics() {
+            try {
+                const res = await fetch(`${API_URL}/analytics/class/${meetingId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const data = await res.json();
+                if (data.success) displayClassAnalytics(data.studentAnalytics, data.classStats);
+                else document.getElementById('loadingState').innerHTML = '<p style="color:#FCA5A5;">No analytics available for this meeting.</p>';
+            } catch (err) {
+                document.getElementById('loadingState').innerHTML = '<p style="color:#FCA5A5;">Error loading analytics.</p>';
+            }
+        }
+
+        function displayClassAnalytics(studentAnalytics, classStats) {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('analyticsContent').style.display = 'block';
+            document.getElementById('totalStudents').textContent = classStats.totalStudents;
+            document.getElementById('avgEngagement').textContent = `${classStats.avgEngagement}%`;
+            document.getElementById('focusDrops').textContent = classStats.focusDropCount;
+            document.getElementById('classSummary').textContent = classStats.summary;
+
+            const body = document.getElementById('studentTableBody');
+            if (!studentAnalytics.length) { body.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--muted);">No student data available.</td></tr>'; return; }
+
+            body.innerHTML = studentAnalytics.map(s => {
+                const status = s.predictions.attention_status;
+                const score = s.predictions.engagement_score;
+                return `<tr>
+                    <td><strong>${s.userName}</strong></td>
+                    <td><span class="status-badge status-${status}">${status.toUpperCase()}</span></td>
+                    <td>
+                        <div class="engagement-bar" style="width:160px;">
+                            <div class="engagement-fill" style="width:${score}%;">${score}%</div>
+                        </div>
+                    </td>
+                    <td>${formatDuration(Number(s.behavioralData.study_duration_seconds) || (Number(s.behavioralData.study_duration) || 0) * 60)}</td>
+                    <td>${s.behavioralData.tab_switch_count}</td>
+                </tr>`;
+            }).join('');
+
+            renderClassHeatmap(studentAnalytics);
+        }
+
+        function formatDuration(totalSeconds) {
+            const safeSeconds = Math.max(0, Number(totalSeconds) || 0);
+            const hours = Math.floor(safeSeconds / 3600);
+            const minutes = Math.floor((safeSeconds % 3600) / 60);
+            const seconds = safeSeconds % 60;
+
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        function renderClassHeatmap(studentAnalytics) {
+            const container = document.getElementById('classHeatmap');
+            container.innerHTML = '';
+            if (!studentAnalytics.length) { container.innerHTML = '<p style="color:var(--muted);">No heatmap data available.</p>'; return; }
+            studentAnalytics.forEach(s => {
+                if (!s.focusTimeline?.length) return;
+                const row = document.createElement('div');
+                row.className = 'student-heatmap-row';
+                const nameDiv = document.createElement('div');
+                nameDiv.className = 'student-name';
+                nameDiv.textContent = s.userName;
+                row.appendChild(nameDiv);
+                const bars = document.createElement('div');
+                bars.className = 'heatmap-bars';
+                s.focusTimeline.forEach(p => {
+                    const bar = document.createElement('div');
+                    bar.className = 'heatmap-bar';
+                    bar.style.background = p.focusLevel >= 70 ? 'linear-gradient(180deg,#10b981,#059669)' : p.focusLevel >= 40 ? 'linear-gradient(180deg,#f59e0b,#d97706)' : 'linear-gradient(180deg,#ef4444,#dc2626)';
+                    bar.title = `${s.userName}: ${p.focusLevel}% at ${new Date(p.timestamp).toLocaleTimeString()}`;
+                    bars.appendChild(bar);
+                });
+                row.appendChild(bars);
+                container.appendChild(row);
+            });
+        }
+    </script>
+</body>
+</html>

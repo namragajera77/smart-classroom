@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard – Smart Classroom</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="theme.css">
+    <style>
+        body { background-color: #0A0B1A; }
+
+        /* ── SIDEBAR (shared with teacher) ── */
+        .app-shell { display: flex; min-height: 100vh; }
+        .sidebar {
+            width: 240px;
+            background: rgba(13,15,34,0.97);
+            border-right: 1px solid rgba(255,255,255,0.07);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0; left: 0; bottom: 0;
+            z-index: 50;
+        }
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 22px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+        }
+        .sidebar-logo-icon {
+            width: 38px; height: 38px;
+            background: linear-gradient(135deg, #6C63FF, #4F46E5);
+            border-radius: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            box-shadow: 0 4px 12px rgba(108,99,255,0.4);
+        }
+        .sidebar-brand-name {
+            font-family: 'Poppins', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            background: linear-gradient(135deg,#fff,#A78BFA);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .sidebar-nav {
+            flex: 1;
+            padding: 16px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            color: var(--muted);
+            font-size: 14px;
+            font-weight: 500;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        .nav-item:hover, .nav-item.active { background: rgba(108,99,255,0.12); color: #fff; border-color: rgba(108,99,255,0.2); }
+        .nav-item.active { background: rgba(108,99,255,0.18); color: #A78BFA; }
+        .sidebar-footer { padding: 16px; border-top: 1px solid rgba(255,255,255,0.07); }
+        .user-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .user-avatar {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            background: linear-gradient(135deg,#06B6D4,#0284C7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 700;
+            color: white;
+            font-family: 'Poppins', sans-serif;
+        }
+        .user-info-mini { flex: 1; min-width: 0; }
+        .user-name-mini { font-size: 13px; font-weight: 600; color: var(--ink); font-family: 'Inter', sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .user-role-mini { font-size: 11px; color: var(--accent); font-family: 'Inter', sans-serif; font-weight: 500; }
+        .btn-icon { width: 32px; height: 32px; background: transparent; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: all 0.2s; }
+        .btn-icon:hover { background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.25); color: #FCA5A5; }
+
+        /* ── MAIN ── */
+        .main-content { flex: 1; margin-left: 240px; display: flex; flex-direction: column; }
+        .topbar {
+            height: 68px;
+            background: rgba(10,11,26,0.80);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 28px;
+            position: sticky;
+            top: 0;
+            z-index: 40;
+        }
+        .topbar-title { font-size: 18px; font-weight: 700; font-family: 'Poppins', sans-serif; color: var(--ink); }
+        .topbar-right { display: flex; align-items: center; gap: 12px; }
+        .notif-btn { width: 40px; height: 40px; border-radius: 11px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: all 0.2s; position: relative; }
+        .notif-btn:hover { background: rgba(108,99,255,0.12); border-color: rgba(108,99,255,0.25); }
+
+        .page { padding: 28px; }
+
+        /* Greeting */
+        .greeting-section { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
+        .greeting-text h1 { font-size: 28px; color: #fff; margin-bottom: 4px; font-weight: 700; }
+        .greeting-text h1 span { background: linear-gradient(135deg,#06B6D4,#A78BFA); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .greeting-text p { color: var(--muted); font-size: 14px; }
+
+        /* Join Box */
+        .join-box {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 12px;
+        }
+        @media (max-width: 600px) { .join-box { grid-template-columns: 1fr; } }
+
+        /* Features grid */
+        .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+        .feature-card { text-align: left !important; }
+        .feature-card h4 { font-size: 15px !important; color: #fff !important; margin-bottom: 8px; font-family: 'Poppins', sans-serif; background: none !important; -webkit-text-fill-color: #fff !important; }
+        .feature-card p { color: var(--muted) !important; font-size: 13px; line-height: 1.6; }
+
+        /* Past meetings */
+        .meeting-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .meeting-item h4 { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 6px; font-family: 'Poppins', sans-serif; }
+        .meeting-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .meeting-date { font-size: 12px; color: var(--muted); }
+
+        .calendar-wrap {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 16px;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 6px;
+        }
+        .cal-head {
+            text-align: center;
+            font-size: 11px;
+            color: var(--muted);
+            font-weight: 700;
+            padding: 8px 0;
+        }
+        .cal-cell {
+            min-height: 68px;
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 10px;
+            padding: 6px;
+            font-size: 11px;
+            color: #dbe4ff;
+            background: rgba(255,255,255,0.02);
+        }
+        .cal-cell.empty { opacity: 0.35; }
+        .cal-day { font-weight: 700; margin-bottom: 4px; }
+        .cal-meeting {
+            background: rgba(6,182,212,0.18);
+            border: 1px solid rgba(6,182,212,0.3);
+            border-radius: 6px;
+            padding: 2px 6px;
+            margin-top: 4px;
+            color: #a5f3fc;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        @media (max-width: 860px) { .sidebar { display: none; } .main-content { margin-left: 0; } }
+    </style>
+</head>
+<body>
+<div class="app-shell">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="sidebar-logo-icon">🎓</div>
+            <div class="sidebar-brand-name">Smart Classroom</div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-item active" onclick="navTo('dashboard', this)"><span>🏠</span><span>Dashboard</span></div>
+            <div class="nav-item" onclick="navTo('upcoming', this)"><span>📅</span><span>Upcoming</span></div>
+            <div class="nav-item" onclick="navTo('meetings', this)"><span>📹</span><span>Past Meetings</span></div>
+            <div class="nav-item" onclick="navTo('progress', this)"><span>📊</span><span>My Progress</span></div>
+            <div class="nav-item" onclick="logout()"><span>🚪</span><span>Logout</span></div>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-card">
+                <div class="user-avatar" id="sidebarAvatar">S</div>
+                <div class="user-info-mini">
+                    <div class="user-name-mini" id="sidebarName">Loading...</div>
+                    <div class="user-role-mini">Student</div>
+                </div>
+                <button class="btn-icon" onclick="logout()">🚪</button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main -->
+    <div class="main-content">
+        <div class="topbar">
+            <div class="topbar-title">Student Dashboard</div>
+            <div class="topbar-right">
+                <div class="notif-btn">🔔</div>
+                <span class="role-badge" style="background:rgba(6,182,212,0.15);color:#67E8F9;border:1px solid rgba(6,182,212,0.3);">Student</span>
+                <button class="btn btn-outline" onclick="logout()" style="padding:8px 16px!important;font-size:13px!important;">Logout</button>
+            </div>
+        </div>
+
+        <div class="page">
+            <!-- Greeting -->
+            <div class="greeting-section">
+                <div class="greeting-text">
+                    <h1>Hey, <span id="userName">Student</span> 👋</h1>
+                    <p>Join your live class and track your engagement after each session.</p>
+                </div>
+            </div>
+
+            <!-- Join Meeting -->
+            <div class="section">
+                <h3>🔗 Join a Meeting</h3>
+                <div class="join-box">
+                    <input type="text" id="meetingIdInput" placeholder="Enter Meeting ID (e.g., MTG-1234567890-ABC123)">
+                    <button class="btn" onclick="joinMeeting()">Join Now →</button>
+                </div>
+                <p class="tip" style="margin-top:12px;">📷 Your browser will ask for camera and microphone permission. Click <strong>Allow</strong> to join with full audio-video.</p>
+            </div>
+
+            <!-- Features -->
+            <div class="section">
+                <h3>✨ Your Features</h3>
+                <div class="features">
+                    <div class="feature-card">
+                        <div class="icon">📹</div>
+                        <h4>Video & Audio</h4>
+                        <p>Toggle camera and microphone while attending class anytime.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="icon">💬</div>
+                        <h4>Live Chat</h4>
+                        <p>Ask questions and communicate during the live session.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="icon">🧠</div>
+                        <h4>Focus Analytics</h4>
+                        <p>Get your engagement and attention summary after class.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="icon">📅</div>
+                        <h4>Meeting History</h4>
+                        <p>Review your previous attended sessions quickly.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section" id="section-upcoming">
+                <h3>📅 Upcoming Classes</h3>
+                <div class="calendar-wrap">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                        <strong id="studentCalendarMonthLabel" style="font-family:'Poppins',sans-serif;color:#fff;">Calendar</strong>
+                        <button class="btn btn-outline" style="padding:8px 14px!important;font-size:12px!important;" onclick="loadUpcomingMeetings()">Refresh</button>
+                    </div>
+                    <div id="studentCalendar" class="calendar-grid"></div>
+                </div>
+                <div id="upcomingStudentMeetings" style="margin-top:12px;"></div>
+            </div>
+
+            <!-- Past Meetings -->
+            <div class="section" id="section-meetings">
+                <h3>📋 My Past Meetings</h3>
+                <div id="pastMeetings">
+                    <div class="empty-state"><p>Loading past meetings...</p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_URL = 'http://localhost:5000/api';
+    let token = localStorage.getItem('token');
+    let user = JSON.parse(localStorage.getItem('user'));
+
+    function checkAuth() {
+        const expiry = localStorage.getItem('tokenExpiry');
+        if (!token || !user || user.role !== 'student') { window.location.href = 'login.html'; return false; }
+        if (expiry && Date.now() > parseInt(expiry)) {
+            ['token','user','tokenExpiry'].forEach(k => localStorage.removeItem(k));
+            window.location.href = 'login.html'; return false;
+        }
+        return true;
+    }
+    if (!checkAuth()) {}
+
+    const displayName = user.name || user.email;
+    document.getElementById('userName').textContent = displayName.split(' ')[0];
+    document.getElementById('sidebarName').textContent = displayName;
+    document.getElementById('sidebarAvatar').textContent = displayName[0].toUpperCase();
+    loadUpcomingMeetings();
+    loadPastMeetings();
+
+    let reminderTimers = [];
+
+    async function joinMeeting() {
+        const id = document.getElementById('meetingIdInput').value.trim();
+        if (!id) { document.getElementById('meetingIdInput').focus(); return; }
+        // Let meeting-room handle protected-meeting password prompts and waiting-room flow.
+        window.location.href = `meeting-room.html?meetingId=${id}`;
+    }
+
+    async function loadPastMeetings() {
+        try {
+            const res = await fetch(`${API_URL}/meetings/my-participated`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const data = await res.json();
+            const container = document.getElementById('pastMeetings');
+            if (data.success && data.meetings.length > 0) {
+                container.innerHTML = data.meetings.map((m,i) => `
+                    <article class="meeting-item feature-card" style="animation-delay:${i*0.07}s">
+                        <div>
+                            <h4>${m.title}</h4>
+                            <div class="meeting-meta">
+                                <span class="status-badge status-${m.status}">${m.status.toUpperCase()}</span>
+                                <span class="meeting-date">${new Date(m.joinedAt).toLocaleString()}</span>
+                            </div>
+                        </div>
+                        ${m.status === 'ended' ? `<button class="btn btn-outline" style="padding:8px 16px!important;font-size:12px!important;" onclick="window.location.href='student-analytics.html?meetingId=${m.meetingId}'">📊 View Analytics</button>` : ''}
+                    </article>
+                `).join('');
+            } else {
+                container.innerHTML = '<div class="empty-state"><p>📭 No past meetings yet. Join a meeting to get started.</p></div>';
+            }
+        } catch (err) {
+            document.getElementById('pastMeetings').innerHTML = '<div class="empty-state"><p>Error loading meetings</p></div>';
+        }
+    }
+
+    async function loadUpcomingMeetings() {
+        try {
+            const res = await fetch(`${API_URL}/meetings/upcoming`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const data = await res.json();
+            if (!data.success) {
+                return;
+            }
+
+            renderStudentCalendar(data.meetings || []);
+            renderUpcomingStudentMeetings(data.meetings || []);
+        } catch (error) {
+            console.error('Load upcoming meetings error:', error);
+        }
+    }
+
+    function renderStudentCalendar(meetings) {
+        const container = document.getElementById('studentCalendar');
+        const monthLabel = document.getElementById('studentCalendarMonthLabel');
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        const firstDay = new Date(year, month, 1);
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const startWeekday = firstDay.getDay();
+
+        monthLabel.textContent = firstDay.toLocaleString([], { month: 'long', year: 'numeric' });
+
+        const byDay = {};
+        meetings.forEach((m) => {
+            const dateBase = m.scheduledFor || m.actualStartTime || m.startTime || m.createdAt;
+            if (!dateBase) return;
+            const d = new Date(dateBase);
+            if (d.getFullYear() !== year || d.getMonth() !== month) return;
+            const day = d.getDate();
+            if (!byDay[day]) byDay[day] = [];
+            byDay[day].push(m);
+        });
+
+        const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        let html = weekdays.map((w) => `<div class="cal-head">${w}</div>`).join('');
+        for (let i = 0; i < startWeekday; i++) html += '<div class="cal-cell empty"></div>';
+        for (let day = 1; day <= daysInMonth; day++) {
+            const items = byDay[day] || [];
+            html += `<div class="cal-cell"><div class="cal-day">${day}</div>${items.slice(0, 2).map((m) => `<div class="cal-meeting">${m.title}</div>`).join('')}${items.length > 2 ? `<div class="cal-meeting">+${items.length - 2} more</div>` : ''}</div>`;
+        }
+        container.innerHTML = html;
+    }
+
+    function renderUpcomingStudentMeetings(meetings) {
+        const container = document.getElementById('upcomingStudentMeetings');
+        const list = [...meetings]
+            .filter((m) => m.status !== 'ended')
+            .sort((a, b) => new Date(a.scheduledFor || a.createdAt) - new Date(b.scheduledFor || b.createdAt))
+            .slice(0, 8);
+
+        if (!list.length) {
+            container.innerHTML = '<div class="empty-state"><p>No upcoming classes right now.</p></div>';
+            return;
+        }
+
+        container.innerHTML = list.map((m, i) => `
+            <article class="meeting-item feature-card" style="animation-delay:${i * 0.05}s">
+                <div>
+                    <h4>${m.title}</h4>
+                    <div class="meeting-meta">
+                        <span class="status-badge status-${m.status}">${m.status.toUpperCase()}</span>
+                        <span class="meeting-date">${m.scheduledFor ? new Date(m.scheduledFor).toLocaleString() : 'No fixed schedule'}</span>
+                    </div>
+                </div>
+                <button class="btn btn-outline" style="padding:8px 16px!important;font-size:12px!important;" onclick="joinMeetingById('${m.meetingId}')">Join by ID</button>
+            </article>
+        `).join('');
+    }
+
+    function joinMeetingById(id) {
+        document.getElementById('meetingIdInput').value = id;
+        joinMeeting();
+    }
+
+    document.getElementById('meetingIdInput').addEventListener('keypress', e => {
+        if (e.key === 'Enter') joinMeeting();
+    });
+
+    function logout() {
+        ['token','user','tokenExpiry'].forEach(k => localStorage.removeItem(k));
+        window.location.href = 'login.html';
+    }
+
+    function navTo(target, el) {
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        if (el) el.classList.add('active');
+
+        if (target === 'dashboard') {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else if (target === 'upcoming') {
+            const sec = document.getElementById('section-upcoming');
+            if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else if (target === 'meetings') {
+            const sec = document.getElementById('section-meetings');
+            if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else if (target === 'progress') {
+            // Go to analytics for most recent ended meeting
+            const btns = document.querySelectorAll('[onclick*="student-analytics"]');
+            if (btns.length > 0) {
+                btns[0].click();
+            } else {
+                showToast('No completed sessions yet. Join a meeting and submit analytics first.');
+            }
+        }
+    }
+
+    function showToast(msg) {
+        const t = document.createElement('div');
+        t.textContent = msg;
+        t.style.cssText = 'position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:rgba(22,26,64,0.95);border:1px solid rgba(6,182,212,0.35);color:#EEF0FF;padding:12px 24px;border-radius:12px;font-size:14px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.4);font-family:Inter,sans-serif;white-space:nowrap;';
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 3500);
+    }
+</script>
+</body>
+</html>
