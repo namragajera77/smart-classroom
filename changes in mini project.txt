@@ -1,2 +1,0 @@
-caption of table(upper) and figures(lower)
-photo caption with numbers
